@@ -1,15 +1,15 @@
 # Project 2 - Wordle Microservice
 
 Group Members:
-Ryan Broguiere
-Madison Jordan
-Gavin Gray
-Jose Hernandez
+- Ryan Broguiere
+- Madison Jordan
+- Gavin Gray
+- Jose Hernandez
 
-## Execution
+## Execution Instructions
 
-To Initialize Databases:
--
+#### Initialize Databases:
+1.
 
-To Start the Services:
-- 
+#### Start the Services:
+1.
