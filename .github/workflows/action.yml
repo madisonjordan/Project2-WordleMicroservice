@@ -1,9 +1,10 @@
 # action.yml
 name: run-on-tuffix
 on:
-  [push]
   pull_request:
-    branches: [ $default-branch ]
+    branches: 
+      - 'main'
+      - 'master-*'
 
 permissions:
   contents: read
