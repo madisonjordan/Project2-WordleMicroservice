@@ -1,10 +1,16 @@
 #!/bin/bash
 
 # Populate word database with five-letter words (without caps, punc, or non-ASCII)
-grep -x '[a-z]\{5\}' /usr/share/dict/words \
-| sqlite-utils insert words.db words - \
-    --text --convert '({"word": w} for w in text.split())'
+DB='words.db'
 
+if [ ! -f "../var/$DB" ]
+then
+    grep -x '[a-z]\{5\}' /usr/share/dict/words \
+    | sqlite-utils insert ../var/words.db words - \
+        --text --convert '({"word": w} for w in text.split())' --pk=word
+else
+    echo "$DB already exists"
+fi
 
 #####################################
 # sqlite-utils schema words.db      #
