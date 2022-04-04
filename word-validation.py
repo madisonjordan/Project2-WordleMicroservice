@@ -1,27 +1,48 @@
 import sqlite3
+import contextlib
+import logging.config
 
-# connect to words database (pre-created) in read-only
-con = sqlite3.connect('file:database/words.db?mode=ro')
-cur = con.cursor()
+from fastapi import FastAPI, Depends, Response, HTTPException, status
+from pydantic import BaseModel, BaseSettings
 
-# get all words in database
-words = con.execute("""
-    select * from words
-""").fetchall()
 
-# user guess
-guess="shinist"
+class Settings(BaseSettings):
+    database: str
+    logging_config: str
 
-# find guess in word list
-guess_is_valid = con.execute(f"""
-    select * from words where word='{guess}'
-    """
-).fetchone()
+    class Config:
+        env_file = "word-validation.env"
 
-if(guess_is_valid is None):
-    print(f"'{guess}' is not a valid guess")
-else:
-    print(guess)
 
-# close connection to database
-con.close()
+def get_db():
+    with contextlib.closing(sqlite3.connect(settings.database)) as db:
+        db.row_factory = sqlite3.Row
+        yield db
+
+def get_logger():
+    return logging.getLogger(__name__)
+
+settings = Settings()
+app = FastAPI()
+
+logging.config.fileConfig(settings.logging_config)
+
+# list all valid 5 letter guesses from database
+@app.get("/words/")
+def list_books(db: sqlite3.Connection = Depends(get_db)):
+    words = db.execute("SELECT * FROM words")
+    return {"words": words.fetchall()}
+
+
+# check if the guess is valid. returns word if valid, otherwise returns error 404
+@app.get("/words/{word}")
+def valid_word(
+    word: str, reponse: Response, db: sqlite3.Connection = Depends(get_db)
+):
+    cur = db.execute("select * from words where word = ?", [word])
+    words = cur.fetchall()
+    if not words:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Not a valid guess"
+        )
+    return {"words": word}
