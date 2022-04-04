@@ -3,7 +3,7 @@ import contextlib
 import logging.config
 
 from fastapi import FastAPI, Depends, Response, HTTPException, status
-from pydantic import BaseModel, BaseSettings
+from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -22,16 +22,17 @@ def get_db():
 def get_logger():
     return logging.getLogger(__name__)
 
+
 settings = Settings()
 app = FastAPI()
 
 logging.config.fileConfig(settings.logging_config)
 
-# list all valid 5 letter guesses from database
+# list all valid guesses from word database
 @app.get("/words/")
 def list_books(db: sqlite3.Connection = Depends(get_db)):
     words = db.execute("SELECT * FROM words")
-    return {"words": words.fetchall()}
+    return {"word": words.fetchall()}
 
 
 # check if the guess is valid. returns word if valid, otherwise returns error 404
@@ -45,4 +46,26 @@ def valid_word(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Not a valid guess"
         )
-    return {"words": word}
+    return {"word": word}
+
+# add new word to database
+@app.post("/words/", status_code=status.HTTP_201_CREATED)
+def create_word(
+    word: str, response: Response, db: sqlite3.Connection = Depends(get_db)
+):
+    w = [word]
+    try:
+        cur = db.execute(
+            """
+            INSERT INTO words(word)
+            VALUES(:word)
+            """,
+            w,
+        )
+        db.commit()
+    except sqlite3.IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"type": type(e).__name__, "msg": str(e)},
+        )
+    return w
