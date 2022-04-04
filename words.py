@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     logging_config: str
 
     class Config:
-        env_file = "word-validation.env"
+        env_file = "words.env"
 
 
 def get_db():

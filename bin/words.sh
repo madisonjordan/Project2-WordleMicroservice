@@ -3,10 +3,11 @@
 # Populate word database with five-letter words (without caps, punc, or non-ASCII)
 DB='words.db'
 
-if [ ! -f "../var/$DB" ]
+if [ ! -f "./var/$DB" ]
 then
+    mkdir -p var/log
     grep -x '[a-z]\{5\}' /usr/share/dict/words \
-    | sqlite-utils insert ../var/words.db words - \
+    | sqlite-utils insert "./var/$DB" words - \
         --text --convert '({"word": w} for w in text.split())' --pk=word
 else
     echo "$DB already exists"
