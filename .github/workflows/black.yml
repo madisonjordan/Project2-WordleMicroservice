@@ -1,5 +1,5 @@
 # black.yml
-name: Lint
+name: lint
 on:
   pull_request:
     branches: 
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  Lint:
+  lint:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository code
