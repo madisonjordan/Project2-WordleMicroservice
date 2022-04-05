@@ -1,0 +1,19 @@
+# black.yml
+name: lint
+on:
+  pull_request:
+    branches: 
+      - 'main'
+      - 'master-*'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Run Lint (Black)
+        uses: psf/black@stable
