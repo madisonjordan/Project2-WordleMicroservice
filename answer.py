@@ -10,4 +10,3 @@ for x in range(len(answer)):
         print(f"{guess}"[x], " - exists")
     else:
         print(f"{guess}"[x], " - not found")
-
