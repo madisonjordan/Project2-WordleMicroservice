@@ -10,6 +10,7 @@ Group Members:
 
 #### Initialize Databases:
 1.
+2. run `./bin/answers.sh` from project root directory
 
 #### Start the Services:
-1.
+1. foreman start
