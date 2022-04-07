@@ -22,15 +22,15 @@ then
     echo -e ${PARSE} | sqlite-utils insert ./var/$DB answers - \
     --text --convert '({"word": w} for w in text.split())' \
     && cat ./bin/date_gen.py | sqlite-utils convert ./var/$DB answers rowid - --output day \
-    && sqlite-utils transform ./var/$DB answers --pk day
+    && sqlite-utils transform ./var/$DB answers --pk day --column-order day --column-order word
 else
     echo "$DB already exists"
 fi
 
 
 #############################################
-#  CREATE TABLE "answers" (                 #
-#    [word] TEXT,                           #
-#    [day] TEXT PRIMARY KEY                 #
+# CREATE TABLE "answers" (                  #
+#   [day] TEXT PRIMARY KEY,                 #
+#   [word] TEXT                             #
 # );                                        #
 #############################################
