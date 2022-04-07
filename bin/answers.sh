@@ -14,7 +14,7 @@ EOF`
 DB='answers.db'
 
 # create table from answers
-# add column to answers.db for dates starting from tomorrow to end of database
+# add column to answers.db for dates - starting at (start_day) + 1 day
 # use "day" column as primary key
 if [ ! -f "./var/$DB" ]
 then
