@@ -34,7 +34,6 @@ def list_books(db: sqlite3.Connection = Depends(get_db)):
     words = db.execute("SELECT * FROM words")
     return {"word": words.fetchall()}
 
-
 # check if the guess is valid. returns word if valid, otherwise returns error 404
 @app.get("/words/{word}")
 def valid_word(
