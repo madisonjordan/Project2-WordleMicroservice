@@ -69,6 +69,7 @@ def create_word(
         )
     return w
 
+
 @app.delete("/words/{word}")
 def delete_word(
     word: str, reponse: Response, db: sqlite3.Connection = Depends(get_db)
@@ -76,3 +77,4 @@ def delete_word(
     cur = db.execute("DELETE FROM words WHERE word = ?", [word])
     db.commit()
     return {"ok": True}
+
