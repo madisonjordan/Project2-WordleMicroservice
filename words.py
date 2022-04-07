@@ -34,7 +34,6 @@ def list_books(db: sqlite3.Connection = Depends(get_db)):
     words = db.execute("SELECT * FROM words")
     return {"word": words.fetchall()}
 
-
 # check if the guess is valid. returns word if valid, otherwise returns error 404
 @app.get("/words/{word}")
 def valid_word(
@@ -69,3 +68,13 @@ def create_word(
             detail={"type": type(e).__name__, "msg": str(e)},
         )
     return w
+
+
+@app.delete("/words/{word}")
+def delete_word(
+    word: str, reponse: Response, db: sqlite3.Connection = Depends(get_db)
+):
+    cur = db.execute("DELETE FROM words WHERE word = ?", [word])
+    db.commit()
+    return {"ok": True}
+
