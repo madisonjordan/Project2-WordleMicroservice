@@ -40,11 +40,13 @@ for x in range(len(answer)):
     else:
         print(f"{guess}"[x], " - not found")
 
+#list all answers
 @app.get("/answers/")
 def list_answers(db: sqlite3.Connection = Depends(get_db)):
     answers = db.execute('SELECT * FROM answers')
     return {"answer": answers.fetchall()}
 
+#get WOTD based on the date parameter entered
 @app.get("/wotd/{date}")
 def list_wotd(
     date: str, response: Response, db: sqlite3.Connection = Depends(get_db)    
