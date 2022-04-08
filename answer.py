@@ -40,7 +40,7 @@ for x in range(len(answer)):
     else:
         print(f"{guess}"[x], " - not found")
 
-# @app.get("/answers/")
-# def list_answer(db: sqlite3.Connection = Depends(get_db)):
-#     answers = db.execute("SELECT * FROM answers")
-#     return {"answer": answers.fetchall()}
+@app.get("/answers/")
+def list_answers(db: sqlite3.Connection = Depends(get_db)):
+    answers = db.execute("SELECT * FROM answers")
+    return {"answer": answers.fetchall()}
