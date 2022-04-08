@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# use `python3 -m pip install sqlite-utils` to load answers.db and run with ./bin/answers.sh
 # load json file using python
 PARSE=`python3 - <<'EOF'
 import json;
