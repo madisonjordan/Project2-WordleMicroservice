@@ -42,5 +42,18 @@ for x in range(len(answer)):
 
 @app.get("/answers/")
 def list_answers(db: sqlite3.Connection = Depends(get_db)):
-    answers = db.execute("SELECT * FROM answers")
+    answers = db.execute('SELECT * FROM answers')
     return {"answer": answers.fetchall()}
+
+@app.get("/wotd/{date}")
+def list_wotd(
+    date: str, response: Response, db: sqlite3.Connection = Depends(get_db)    
+):    
+    cur = db.execute('SELECT word FROM answers WHERE day = ?', [date])
+    wotd = cur.fetchall()
+    if not wotd:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Not a valid date or no word exists for the date"
+        )
+    return{"wotd": wotd}
+
