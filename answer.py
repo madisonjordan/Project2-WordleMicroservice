@@ -1,12 +1,69 @@
+import collections
+import contextlib
+import logging.config
 import sqlite3
+import typing
+import datetime
+from datetime import date
+import json
 
-guess = "zones"
-answer = "zebra"
+from fastapi import FastAPI, Depends, Response, HTTPException, status
+from pydantic import BaseModel, BaseSettings
 
-for x in range(len(answer)):
-    if f"{answer}"[x] == f"{guess}"[x]:
-        print(f"{guess}"[x], " - correct position")
-    elif f"{guess}"[x] in f"{answer}":
-        print(f"{guess}"[x], " - exists")
-    else:
-        print(f"{guess}"[x], " - not found")
+
+class Settings(BaseSettings):
+    database: str
+    logging_config: str
+
+    class Config:
+        env_file = "answers.env"
+
+
+settings = Settings()
+app = FastAPI()
+
+
+def get_db():
+    with contextlib.closing(sqlite3.connect(settings.database)) as db:
+        db.row_factory = sqlite3.Row
+        yield db
+
+
+def get_logger():
+    return logging.getLogger(__name__)
+
+
+@app.get("/check/{guess}")
+def find_answer(
+    guess: str,
+    db: sqlite3.Connection = Depends(get_db),
+    logger: logging.Logger = Depends(get_logger),
+):
+    guess = guess
+    day = datetime.date.today()
+    logger.debug(f"{day}")
+    cur = db.execute(
+        "SELECT word FROM answers WHERE day = ? LIMIT 1", [day.strftime("%Y-%m-%d")]
+    )
+    answer = cur.fetchone()
+    if not answer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No Answer for this Day"
+        )
+    answer = answer[0]
+    check = [len(guess)]
+    for x in range(len(guess)):
+        curr_letter = f"{guess}"[x]
+        if guess[x] == f"{answer}"[x]:
+            check_pos = "correct"
+        elif f"{guess}"[x] in f"{answer}":
+            check_pos = "exists"
+        else:
+            check_pos = "not in answer"
+
+        check.append(
+            {"position": f"{x}", "letter": f"{curr_letter}", "check": f"{check_pos}"}
+        )
+        logger.debug(answer)
+
+    return check
