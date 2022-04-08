@@ -9,7 +9,8 @@ Group Members:
 ## Execution Instructions
 
 #### Initialize Databases:
-1.
+1. run `./bin/words.sh` to populate `words.db`
+2. run `./bin/answers.sh` to populate `answers.db`
 
 #### Start the Services:
-1.
+1. run `foreman start` in the project root directory
