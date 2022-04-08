@@ -30,7 +30,7 @@ logging.config.fileConfig(settings.logging_config)
 
 # list all valid guesses from word database
 @app.get("/words/")
-def list_books(db: sqlite3.Connection = Depends(get_db)):
+def list_words(db: sqlite3.Connection = Depends(get_db)):
     words = db.execute("SELECT * FROM words")
     return {"word": words.fetchall()}
 
