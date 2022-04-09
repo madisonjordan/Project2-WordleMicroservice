@@ -34,6 +34,19 @@ def get_logger():
     return logging.getLogger(__name__)
 
 
+# get WOTD based on the date parameter entered
+@app.get("/answers/{date}")
+def get_answer(date: str, response: Response, db: sqlite3.Connection = Depends(get_db)):
+    cur = db.execute("SELECT word FROM answers WHERE day = ?", [date])
+    wotd = cur.fetchall()
+    if not wotd:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No Answer for this Day",
+        )
+    return {"word": wotd}
+
+
 # check guess against today's answer in answers.db
 @app.get("/check/{guess}")
 def find_answer(
