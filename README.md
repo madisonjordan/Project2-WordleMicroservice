@@ -10,6 +10,7 @@ Group Members:
 ## Execution Instructions
 
 #### Initialize Databases:
+<<<<<<< HEAD
 
 
 1. run `./bin/words/sh` from project root directory
@@ -18,3 +19,9 @@ Group Members:
 #### Start the Services:
 
 1. foreman start
+=======
+1.
+
+#### Start the Services:
+1.
+>>>>>>> main
