@@ -1,10 +1,16 @@
-import sqlite3
+import collections
 import contextlib
 import logging.config
+import sqlite3
+
 import typing
+import datetime
+from datetime import date
+import json
+
 
 from fastapi import FastAPI, Depends, Response, HTTPException, status
-from pydantic import BaseSettings
+from pydantic import BaseModel, BaseSettings
 
 
 class Settings(BaseSettings):
@@ -12,7 +18,11 @@ class Settings(BaseSettings):
     logging_config: str
 
     class Config:
-        env_file = "answer.env"
+        env_file = "answers.env"
+
+
+settings = Settings()
+app = FastAPI()
 
 
 def get_db():
@@ -20,40 +30,41 @@ def get_db():
         db.row_factory = sqlite3.Row
         yield db
 
+
 def get_logger():
     return logging.getLogger(__name__)
 
 
-settings = Settings()
-app = FastAPI()
-
-logging.config.fileConfig(settings.logging_config)
-
-guess = "zones"
-answer = "zebra"
-
-for x in range(len(answer)):
-    if f"{answer}"[x] == f"{guess}"[x]:
-        print(f"{guess}"[x], " - correct position")
-    elif f"{guess}"[x] in f"{answer}":
-        print(f"{guess}"[x], " - exists")
-    else:
-        print(f"{guess}"[x], " - not found")
-
-@app.get("/answers/")
-def list_answers(db: sqlite3.Connection = Depends(get_db)):
-    answers = db.execute('SELECT * FROM answers')
-    return {"answer": answers.fetchall()}
-
-@app.get("/wotd/{date}")
-def list_wotd(
-    date: str, response: Response, db: sqlite3.Connection = Depends(get_db)    
-):    
-    cur = db.execute('SELECT word FROM answers WHERE day = ?', [date])
-    wotd = cur.fetchall()
-    if not wotd:
+@app.get("/check/{guess}")
+def find_answer(
+    guess: str,
+    db: sqlite3.Connection = Depends(get_db),
+    logger: logging.Logger = Depends(get_logger),
+):
+    guess = guess
+    day = datetime.date.today()
+    logger.debug(f"{day}")
+    cur = db.execute(
+        "SELECT word FROM answers WHERE day = ? LIMIT 1", [day.strftime("%Y-%m-%d")]
+    )
+    answer = cur.fetchone()
+    if not answer:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Not a valid date or no word exists for the date"
+            status_code=status.HTTP_404_NOT_FOUND, detail="No Answer for this Day"
         )
-    return{"wotd": wotd}
+    answer = answer[0]
+    check = [len(guess)]
+    for x in range(len(guess)):
+        curr_letter = f"{guess}"[x]
+        if guess[x] == f"{answer}"[x]:
+            check_pos = "correct"
+        elif f"{guess}"[x] in f"{answer}":
+            check_pos = "exists"
+        else:
+            check_pos = "not in answer"
 
+        check.append(
+            {"position": f"{x}", "letter": f"{curr_letter}", "check": f"{check_pos}"}
+        )
+
+    return check
