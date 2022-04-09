@@ -2,11 +2,10 @@ import collections
 import contextlib
 import logging.config
 import sqlite3
-
 import typing
+import json
 import datetime
 from datetime import date
-import json
 
 
 from fastapi import FastAPI, Depends, Response, HTTPException, status
@@ -18,7 +17,7 @@ class Settings(BaseSettings):
     logging_config: str
 
     class Config:
-        env_file = "answer.env"
+        env_file = "answers.env"
 
 
 settings = Settings()
@@ -35,6 +34,7 @@ def get_logger():
     return logging.getLogger(__name__)
 
 
+# check guess against today's answer in answers.db
 @app.get("/check/{guess}")
 def find_answer(
     guess: str,
