@@ -19,6 +19,7 @@ def get_db():
         db.row_factory = sqlite3.Row
         yield db
 
+
 def get_logger():
     return logging.getLogger(__name__)
 
@@ -34,11 +35,10 @@ def list_books(db: sqlite3.Connection = Depends(get_db)):
     words = db.execute("SELECT * FROM words")
     return {"word": words.fetchall()}
 
+
 # check if the guess is valid. returns word if valid, otherwise returns error 404
 @app.get("/words/{word}")
-def valid_word(
-    word: str, reponse: Response, db: sqlite3.Connection = Depends(get_db)
-):
+def valid_word(word: str, reponse: Response, db: sqlite3.Connection = Depends(get_db)):
     cur = db.execute("select * from words where word = ?", [word])
     words = cur.fetchall()
     if not words:
@@ -46,6 +46,7 @@ def valid_word(
             status_code=status.HTTP_404_NOT_FOUND, detail="Not a valid guess"
         )
     return {"word": word}
+
 
 # add new word to database
 @app.post("/words/", status_code=status.HTTP_201_CREATED)
@@ -71,10 +72,7 @@ def create_word(
 
 
 @app.delete("/words/{word}")
-def delete_word(
-    word: str, reponse: Response, db: sqlite3.Connection = Depends(get_db)
-):
+def delete_word(word: str, reponse: Response, db: sqlite3.Connection = Depends(get_db)):
     cur = db.execute("DELETE FROM words WHERE word = ?", [word])
     db.commit()
     return {"ok": True}
-
