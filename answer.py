@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     logging_config: str
 
     class Config:
-        env_file = "answers.env"
+        env_file = "answer.env"
 
 
 settings = Settings()
