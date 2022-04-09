@@ -2,13 +2,16 @@ import collections
 import contextlib
 import logging.config
 import sqlite3
+
 import typing
 import datetime
 from datetime import date
 import json
 
+
 from fastapi import FastAPI, Depends, Response, HTTPException, status
 from pydantic import BaseModel, BaseSettings
+
 
 
 class Settings(BaseSettings):
@@ -64,6 +67,5 @@ def find_answer(
         check.append(
             {"position": f'{x}', "letter": f'{curr_letter}', "check": f'{check_pos}'}
         )
-        logger.debug(answer)
 
     return check
