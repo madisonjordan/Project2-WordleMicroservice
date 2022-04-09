@@ -53,16 +53,16 @@ def find_answer(
     answer = answer[0]
     check = [len(guess)]
     for x in range(len(guess)):
-        curr_letter = f"{guess}"[x]
-        if guess[x] == f"{answer}"[x]:
+        curr_letter = f'{guess}'[x]
+        if guess[x] == f'{answer}'[x]:
             check_pos = "correct"
-        elif f"{guess}"[x] in f"{answer}":
+        elif f'{guess}'[x] in f'{answer}':
             check_pos = "exists"
         else:
             check_pos = "not in answer"
 
         check.append(
-            {"position": f"{x}", "letter": f"{curr_letter}", "check": f"{check_pos}"}
+            {"position": f'{x}', "letter": f'{curr_letter}', "check": f'{check_pos}'}
         )
         logger.debug(answer)
 
