@@ -1,11 +1,8 @@
-# Project 2 - Wordle Microservice
+# Project 3 - Wordle Microservice
 
 Group Members:
 
-- Ryan Broguiere
 - Madison Jordan
-- Gavin Gray
-- Jose Hernandez
 
 ## Execution Instructions
 
