@@ -2,13 +2,7 @@ PRAGMA foreign_keys = ON;
 
 DROP VIEW IF EXISTS wins;
 DROP VIEW IF EXISTS streaks;
-DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS games;
-
-CREATE TABLE users(
-    user_id GUID PRIMARY KEY, 
-    username VARCHAR 
-);
 
 CREATE TABLE games(
     user_id GUID NOT NULL,

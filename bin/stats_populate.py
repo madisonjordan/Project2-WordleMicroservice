@@ -5,6 +5,7 @@ from faker.factory import Factory
 import sqlite_utils
 import datetime
 from datetime import date, timedelta
+import collections
 
 # use UUID in table
 sqlite3.register_converter("GUID", lambda b: uuid.UUID(bytes_le=b))
@@ -26,7 +27,7 @@ fake_users = [
 ]
 
 # add fake users to users table
-db = sqlite_utils.Database("./var/stats.db")
+db = sqlite_utils.Database("./var/users.db")
 db["users"].insert_all(fake_users)
 
 
@@ -35,29 +36,47 @@ start_date = datetime.date(2022, 1, 1)
 end_date = datetime.date.today()
 day_range = (end_date - start_date).days
 
-# generate games for a user
-games = [0] * num_users
+# count number of games per user
+user_games_count = [0] * num_users
 
 # all fake games
 num_games = 10000
-fake_games = []
+# user_game = {"user_id": str, "game_id": int, "stats": {}}
+user_game = []
 
-for i in range(num_games):
-    curr_user = fake.random_int(min=0, max=num_users - 1)
-    games[curr_user] += 1
-    user_id = fake_users[curr_user].get("user_id")
-    game_id = games[curr_user]
-    game = {
-        "user_id": user_id,
-        "game_id": game_id,
-        "finished": (
-            start_date + datetime.timedelta(days=fake.random_int(min=0, max=day_range))
-        ),
-        "guesses": fake.random_int(min=1, max=6),
-        "won": fake.boolean(chance_of_getting_true=75),
-    }
-    fake_games.append(game)
+shards = 3
+shard_games = collections.defaultdict(list)
+
+
+def getShardId(string_uuid):
+    curr_uuid = uuid.UUID(string_uuid)
+    return curr_uuid.int % shards
+
+
+for i in range(num_users):
+    user_id = fake_users[i].get("user_id")
+    games_played = fake.random_int(min=50, max=500)
+    game_id = 0
+    user_game = []
+    for i in range(games_played):
+        game_id += 1
+        game = {
+            "user_id": user_id,
+            "game_id": game_id,
+            "finished": (
+                start_date
+                + datetime.timedelta(days=fake.random_int(min=0, max=day_range))
+            ),
+            "guesses": fake.random_int(min=1, max=6),
+            "won": fake.boolean(chance_of_getting_true=75),
+        }
+    shard_id = getShardId(user_id)
+    shard_games[shard_id].append(game)
+
 
 # add fake games to games table
-db = sqlite_utils.Database("./var/stats.db")
-db["games"].insert_all(fake_games)
+games_db = ["./var/games0.db", "./var/games1.db", "./var/games2.db"]
+
+for i in range(shards):
+    db = sqlite_utils.Database(games_db[i])
+    db["games"].insert_all(shard_games[i])
