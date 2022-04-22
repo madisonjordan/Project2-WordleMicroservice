@@ -36,14 +36,6 @@ start_date = datetime.date(2022, 1, 1)
 end_date = datetime.date.today()
 day_range = (end_date - start_date).days
 
-# count number of games per user
-user_games_count = [0] * num_users
-
-# all fake games
-num_games = 10000
-# user_game = {"user_id": str, "game_id": int, "stats": {}}
-user_game = []
-
 shards = 3
 shard_games = collections.defaultdict(list)
 
@@ -55,6 +47,7 @@ def getShardId(string_uuid):
 
 for i in range(num_users):
     user_id = fake_users[i].get("user_id")
+    # generate games for this user
     games_played = fake.random_int(min=50, max=500)
     game_id = 0
     user_game = []
@@ -70,6 +63,7 @@ for i in range(num_users):
             "guesses": fake.random_int(min=1, max=6),
             "won": fake.boolean(chance_of_getting_true=75),
         }
+    # enter user's game into the correct shard
     shard_id = getShardId(user_id)
     shard_games[shard_id].append(game)
 
