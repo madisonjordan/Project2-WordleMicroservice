@@ -17,4 +17,8 @@
     [http.services.app]
       [http.services.app.loadBalancer]
         [[http.services.app.loadBalancer.servers]]
-          url = "http://127.0.0.1:8000"
+          url = "http://127.0.0.1:5300"
+        [[http.services.app.loadBalancer.servers]]
+          url = "http://127.0.0.1:5301"
+        [[http.services.app.loadBalancer.servers]]
+          url = "http://127.0.0.1:5302"
