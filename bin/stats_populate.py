@@ -1,6 +1,7 @@
 import sqlite3
 import uuid
 from faker import Faker
+from faker.providers import BaseProvider
 from faker.factory import Factory
 import sqlite_utils
 import datetime
@@ -20,19 +21,12 @@ fake.seed(0)
 num_users = 1000
 
 fake_users = [
-    {
-        "user_id": fake.uuid4(),
-        "username": fake.user_name(),
-    }
-    for x in range(num_users)
+    {"user_id": fake.uuid4(), "username": fake.user_name()} for x in range(num_users)
 ]
-
-# add fake users to users table
-db = sqlite_utils.Database("./var/users.db")
-db["users"].insert_all(fake_users)
 
 # create shards for games stats databases
 shards = 3
+shard_users = collections.defaultdict(list)
 shard_games = collections.defaultdict(list)
 
 
@@ -47,6 +41,9 @@ end_date = datetime.date.today()
 
 for i in range(num_users):
     user_id = fake_users[i].get("user_id")
+    # insert user into proper shard
+    shard_id = getShardId(user_id)
+    shard_users[shard_id].append(fake_users[i])
     # generate games for this user
     games_played = fake.random_int(min=50, max=500)
     # fake first game date for each user
@@ -66,13 +63,13 @@ for i in range(num_users):
             "won": fake.boolean(chance_of_getting_true=75),
         }
         # enter user's game into the correct shard
-        shard_id = getShardId(user_id)
         shard_games[shard_id].append(game)
 
 
 # add fake games to games table
-games_db = ["./var/games0.db", "./var/games1.db", "./var/games2.db"]
+stats_db = ["./var/stats0.db", "./var/stats1.db", "./var/stats2.db"]
 
 for i in range(shards):
-    db = sqlite_utils.Database(games_db[i])
+    db = sqlite_utils.Database(stats_db[i])
+    db["users"].insert_all(shard_users[i])
     db["games"].insert_all(shard_games[i])
