@@ -82,10 +82,10 @@ def get_stats(user_id: str, response: Response):
         "3": guesses_query[2][0],
         "4": guesses_query[3][0],
         "5": guesses_query[4][0],
-        "6": guesses_query[5][0],
+        "6": guesses_query[5][0]
     }
     avg_guesses = db.execute(
-        "SELECT AVG(guesses) FROM games WERE user_id = ? LIMIT 1", [user_id]
+        "SELECT AVG(guesses) FROM games WHERE user_id = ? LIMIT 1", [user_id]
     )
     avg_guesses = avg_guesses.fetchone()
     games_played = db.execute(
