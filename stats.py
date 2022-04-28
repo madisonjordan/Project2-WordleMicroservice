@@ -62,6 +62,7 @@ def get_stats(user_id: str, response: Response):
         "SELECT streak FROM streaks WHERE user_id = ? ORDER BY streak DESC LIMIT 1",
         [user_id],
     )
+    # streaks for this user
     max_streak = max_streak.fetchone()
     if not max_streak:
         raise HTTPException(
@@ -72,8 +73,18 @@ def get_stats(user_id: str, response: Response):
         "SELECT streak FROM streaks WHERE user_id = ? LIMIT 1", [user_id]
     )
     curr_streak = curr_streak.fetchone()
+    # num games
+    games_played = db.execute(
+        "SELECT COUNT(*) FROM games WHERE user_id = ? LIMIT 1", [user_id]
+    )
+    games_played = games_played.fetchone()
+    # num wins and losses
+    wins = db.execute("SELECT wins FROM wins WHERE user_id = ? LIMIT 1", [user_id])
+    wins = wins.fetchone()
+    losses = games_played[0] - wins[0]
+    # count of guesses in each win, or count of fails
     guesses = db.execute(
-        "SELECT COUNT(guesses) FROM games WHERE user_id = ? GROUP BY guesses", [user_id]
+        "SELECT COUNT(guesses) FROM games WHERE user_id = ? AND won = TRUE GROUP BY guesses", [user_id]
     )
     guesses_query = guesses.fetchall()
     guesses = {
@@ -83,17 +94,13 @@ def get_stats(user_id: str, response: Response):
         "4": guesses_query[3][0],
         "5": guesses_query[4][0],
         "6": guesses_query[5][0],
+        "failed": losses
     }
     avg_guesses = db.execute(
         "SELECT AVG(guesses) FROM games WHERE user_id = ? LIMIT 1", [user_id]
     )
     avg_guesses = avg_guesses.fetchone()
-    games_played = db.execute(
-        "SELECT COUNT(*) FROM games WHERE user_id = ? LIMIT 1", [user_id]
-    )
-    games_played = games_played.fetchone()
-    wins = db.execute("SELECT wins FROM wins WHERE user_id = ? LIMIT 1", [user_id])
-    wins = wins.fetchone()
+
     avg_wins = wins[0] / games_played[0]
 
     return {
