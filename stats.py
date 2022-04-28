@@ -58,11 +58,12 @@ def get_user(user_id: str, response: Response):
 def get_stats(user_id: str, response: Response):
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-    cur = db.execute("SELECT * FROM games WHERE user_id = ?", [user_id])
-    user_game = cur.fetchall()
-    if not user_game:
+    streaks = db.execute("SELECT * FROM streaks WHERE user_id = ? ORDER BY streak DESC", [user_id])
+    user_streaks = streaks.fetchall()
+    max_streak = user_streaks[0]
+    if not user_streaks:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User does not exist",
         )
-    return {"game": user_game}
+    return {"max streak": max_streak}
