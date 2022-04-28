@@ -97,10 +97,13 @@ def get_stats(user_id: str, response: Response):
         "6": guesses_query[5][0],
         "failed": losses,
     }
-    avg_guesses = db.execute(
-        "SELECT AVG(guesses) FROM games WHERE user_id = ? LIMIT 1", [user_id]
-    )
-    avg_guesses = avg_guesses.fetchone()
+    # average guesses for wins
+    sum = 0
+    for i in range(6):
+        key = i + 1
+        sum += key * guesses[f"{key}"]
+    avg_guesses = sum / wins[0]
+
     avg_wins = wins[0] / games_played[0]
 
     return {
@@ -110,5 +113,5 @@ def get_stats(user_id: str, response: Response):
         "winPercentage": avg_wins,
         "gamesPlayed": games_played[0],
         "gamesWon": wins[0],
-        "averageGuesses": avg_guesses[0],
+        "averageGuesses": avg_guesses,
     }
