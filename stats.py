@@ -58,12 +58,37 @@ def get_user(user_id: str, response: Response):
 def get_stats(user_id: str, response: Response):
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-    streaks = db.execute("SELECT * FROM streaks WHERE user_id = ? ORDER BY streak DESC", [user_id])
-    user_streaks = streaks.fetchall()
-    max_streak = user_streaks[0]
-    if not user_streaks:
+    max_streak = db.execute(
+        "SELECT streak FROM streaks WHERE user_id = ? ORDER BY streak DESC LIMIT 1",
+        [user_id],
+    )
+    max_streak = max_streak.fetchone()
+    if not max_streak:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User does not exist",
         )
-    return {"max streak": max_streak}
+    curr_streak = db.execute(
+        "SELECT streak FROM streaks WHERE user_id = ? LIMIT 1", [user_id]
+    )
+    curr_streak = curr_streak.fetchone()
+    guesses = db.execute(
+        "SELECT COUNT(guesses) FROM games WHERE user_id = ? GROUP BY guesses", [user_id]
+    )
+    guesses_query = guesses.fetchall()
+    guesses = {"1": guesses_query[0][0], "2": guesses_query[1][0], "3": guesses_query[2][0], "4": guesses_query[3][0], "5": guesses_query[4][0], "6": guesses_query[5][0]}
+    avg_guesses = db.execute(
+        "SELECT AVG(guesses) FROM games WHERE user_id = ? LIMIT 1", [user_id]
+    )
+    avg_guesses = avg_guesses.fetchone()
+    games_played =  db.execute(
+        "SELECT COUNT(*) FROM games WHERE user_id = ? LIMIT 1", [user_id]
+        )
+    games_played = games_played.fetchone()
+    wins = db.execute(
+        "SELECT wins FROM wins WHERE user_id = ? LIMIT 1", [user_id]
+    )
+    wins = wins.fetchone()
+    avg_wins = wins[0] / games_played[0]
+
+    return {"currentStreak": curr_streak[0], "maxStreak": max_streak[0], "guesses": guesses, "winPercentage": avg_wins, "gamesPlayed": games_played[0], "gamesWon": wins[0], "averageGuesses": avg_guesses[0]}
