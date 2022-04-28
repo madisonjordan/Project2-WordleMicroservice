@@ -70,7 +70,8 @@ def get_stats(user_id: str, response: Response):
             detail="User does not exist",
         )
     curr_streak = db.execute(
-        "SELECT streak FROM streaks WHERE user_id = ? LIMIT 1", [user_id]
+        "SELECT streak FROM streaks WHERE user_id = ? ORDER BY ending DESC LIMIT 1",
+        [user_id],
     )
     curr_streak = curr_streak.fetchone()
     # num games
