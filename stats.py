@@ -52,3 +52,17 @@ def get_user(user_id: str, response: Response):
             detail="User does not exist",
         )
     return {"user": user}
+
+
+@app.get("/stats/{user_id}")
+def get_stats(user_id: str, response: Response):
+    shard = getShardId(user_id)
+    db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
+    cur = db.execute("SELECT * FROM games WHERE user_id = ?", [user_id])
+    user_game = cur.fetchall()
+    if not user_game:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User does not exist",
+        )
+    return {"game": user_game}
