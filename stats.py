@@ -84,7 +84,8 @@ def get_stats(user_id: str, response: Response):
     losses = games_played[0] - wins[0]
     # count of guesses in each win, or count of fails
     guesses = db.execute(
-        "SELECT COUNT(guesses) FROM games WHERE user_id = ? AND won = TRUE GROUP BY guesses", [user_id]
+        "SELECT COUNT(guesses) FROM games WHERE user_id = ? AND won = TRUE GROUP BY guesses",
+        [user_id],
     )
     guesses_query = guesses.fetchall()
     guesses = {
@@ -94,13 +95,12 @@ def get_stats(user_id: str, response: Response):
         "4": guesses_query[3][0],
         "5": guesses_query[4][0],
         "6": guesses_query[5][0],
-        "failed": losses
+        "failed": losses,
     }
     avg_guesses = db.execute(
         "SELECT AVG(guesses) FROM games WHERE user_id = ? LIMIT 1", [user_id]
     )
     avg_guesses = avg_guesses.fetchone()
-
     avg_wins = wins[0] / games_played[0]
 
     return {
