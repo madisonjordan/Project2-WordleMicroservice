@@ -44,7 +44,7 @@ def get_logger():
 
 # get WOTD based on the date parameter entered
 @app.get("/answers/{day}")
-def get_answer(date: str, response: Response, db: sqlite3.Connection = Depends(get_db)):
+def get_answer(day: str, response: Response, db: sqlite3.Connection = Depends(get_db)):
     cur = db.execute("SELECT word FROM answers WHERE day = ?", [day])
     wotd = cur.fetchall()
     if not wotd:
