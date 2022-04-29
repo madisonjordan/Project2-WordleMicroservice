@@ -126,12 +126,13 @@ def top10_streaks_all():
     all_list = []
     top10 = []
     for shard in range(settings.shards):
-        db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
+        db = sqlite3.connect(f"./var/stats{shard}.db")
         shard_top10[shard] = db.execute(
             "SELECT * FROM streaks ORDER BY streak DESC LIMIT 10"
         ).fetchall()
         temp.append(shard_top10[shard])
     all_list = list(itertools.chain(*temp))
+    # sort by streaks (index 1)
     all_list.sort(reverse=True, key=lambda x: x[1])
     for user in range(10):
         user_streak = {"user": all_list[user][0], "streak": all_list[user][1]}
