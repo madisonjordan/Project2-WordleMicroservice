@@ -120,7 +120,7 @@ def get_stats(user_id: str, response: Response):
 
 
 @app.get("/top10/streaks/all")
-def top10_streaks_all():
+def top10_streaks_all_time():
     shard_top10 = collections.defaultdict(list)
     temp = []
     all_list = []
