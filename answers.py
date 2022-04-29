@@ -79,15 +79,12 @@ def change_answer(
 @app.get("/check/{guess}")
 def find_answer(
     guess: str,
+    day: str = datetime.date.today().strftime("%Y-%m-%d"),
     db: sqlite3.Connection = Depends(get_db),
     logger: logging.Logger = Depends(get_logger),
 ):
     guess = guess
-    day = datetime.date.today()
-    logger.debug(f"{day}")
-    cur = db.execute(
-        "SELECT word FROM answers WHERE day = ? LIMIT 1", [day.strftime("%Y-%m-%d")]
-    )
+    cur = db.execute("SELECT word FROM answers WHERE day = ? LIMIT 1", [day])
     answer = cur.fetchone()
     if not answer:
         raise HTTPException(
