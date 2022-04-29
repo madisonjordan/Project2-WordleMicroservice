@@ -6,10 +6,13 @@ import typing
 import json
 import datetime
 from datetime import date
+import sqlite_utils
+from sqlite_utils import Database
 
 
-from fastapi import FastAPI, Depends, Response, HTTPException, status
+from fastapi import FastAPI, Depends, Response, HTTPException, status, Body
 from pydantic import BaseModel, BaseSettings
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -22,6 +25,11 @@ class Settings(BaseSettings):
 
 settings = Settings()
 app = FastAPI()
+
+
+class Answer(BaseModel):
+    day: Optional[str] = None
+    word: Optional[str] = None
 
 
 def get_db():
@@ -44,7 +52,27 @@ def get_answer(date: str, response: Response, db: sqlite3.Connection = Depends(g
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No Answer for this Day",
         )
-    return {"word": wotd}
+    return wotd
+
+
+@app.put("/answers")
+def change_answer(
+    day: str,
+    answer: str,
+    db: sqlite3.Connection = Depends(get_db),
+):
+    results = {"day": day, "word": answer}
+    sql = "update answers set word=:word where day=:day"
+    cur = db.execute(sql, results)
+    cur = db.execute("SELECT * FROM answers WHERE day = ? LIMIT 1", [day])
+    db.commit()
+    wotd = cur.fetchall()
+    if not wotd:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No Answer for this Day",
+        )
+    return wotd
 
 
 # check guess against today's answer in answers.db
