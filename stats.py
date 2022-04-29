@@ -5,6 +5,7 @@ import datetime
 import contextlib
 import logging.config
 import collections
+import itertools
 
 from fastapi import FastAPI, Depends, Response, HTTPException, status, Request
 from pydantic import BaseSettings
@@ -116,3 +117,24 @@ def get_stats(user_id: str, response: Response):
         "gamesWon": wins[0],
         "averageGuesses": avg_guesses,
     }
+
+
+@app.get("/top10/streaks/all")
+def top10_streaks_all():
+    shard_top10 = collections.defaultdict(list)
+    temp = []
+    all_list = []
+    top10 = []
+    for shard in range(settings.shards):
+        db = sqlite3.connect(f"./var/stats{shard}.db")
+        shard_top10[shard] = db.execute(
+            "SELECT * FROM streaks ORDER BY streak DESC LIMIT 10"
+        ).fetchall()
+        temp.append(shard_top10[shard])
+    all_list = list(itertools.chain(*temp))
+    # sort by streaks (index 1)
+    all_list.sort(reverse=True, key=lambda x: x[1])
+    for user in range(10):
+        user_streak = {"user": all_list[user][0], "streak": all_list[user][1]}
+        top10.append(user_streak)
+    return top10

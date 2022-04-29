@@ -13,7 +13,7 @@
 
     [http.routers.stats]
       service = "statistics"
-      rule = "PathPrefix(`/users`) || PathPrefix(`/stats`)"
+      rule = "PathPrefix(`/users`) || PathPrefix(`/stats`) || PathPrefix(`/top10`)"
       middlewares = ["api-stripprefix"]
 
     [http.routers.words]
