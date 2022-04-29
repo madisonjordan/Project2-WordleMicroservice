@@ -128,14 +128,18 @@ def top10_streaks_all():
     for shard in range(settings.shards):
         db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
         shard_top10[shard] = db.execute(
-            "SELECT * FROM streaks ORDER BY streak DESC LIMIT 10"
+            "SELECT streaks.user_id, users.username, streaks.streak FROM streaks INNER JOIN users ON streaks.user_id=users.user_id ORDER BY streak DESC LIMIT 10"
         ).fetchall()
         temp.append(shard_top10[shard])
     all_list = list(itertools.chain(*temp))
-    # sort by streaks (index 1)
-    all_list.sort(reverse=True, key=lambda x: x[1])
+    # sort by streaks (index 2)
+    all_list.sort(reverse=True, key=lambda x: x[2])
     for user in range(10):
-        user_streak = {"user": all_list[user][0], "streak": all_list[user][1]}
+        user_streak = {
+            "user_id": all_list[user][0],
+            "username": all_list[user][1],
+            "streak": all_list[user][2],
+        }
         top10.append(user_streak)
     return top10
 
@@ -149,13 +153,17 @@ def top10_wins():
     for shard in range(settings.shards):
         db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
         shard_top10[shard] = db.execute(
-            "SELECT * FROM wins ORDER BY wins DESC LIMIT 10"
+            "SELECT wins.user_id, users.username, wins.wins FROM wins INNER JOIN users ON wins.user_id=users.user_id ORDER BY wins DESC LIMIT 10"
         ).fetchall()
         temp.append(shard_top10[shard])
     all_list = list(itertools.chain(*temp))
-    # sort by streaks (index 1)
-    all_list.sort(reverse=True, key=lambda x: x[1])
+    # sort by wins (index 2)
+    all_list.sort(reverse=True, key=lambda x: x[2])
     for user in range(10):
-        user_wins = {"user": all_list[user][0], "wins": all_list[user][1]}
+        user_wins = {
+            "user_id": all_list[user][0],
+            "username": all_list[user][1],
+            "wins": all_list[user][2],
+        }
         top10.append(user_wins)
     return top10
