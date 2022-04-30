@@ -15,14 +15,26 @@ sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
 
 # create fake user data
 Faker = Factory.create
-fake = Faker()
-fake.seed(0)
+NUM_STATS = 1_000_000
+NUM_USERS = 100_000
+YEAR = 2022
 
-num_users = 1000
+fake = Faker()
+fake.seed(YEAR)
+
+# create unique usernames and uuids
+usernames_unique = set()
+
+while len(usernames_unique) in range(NUM_USERS):
+    user = fake.user_name()
+    usernames_unique.add(user)
+
+usernames = list(usernames_unique)
 
 fake_users = [
-    {"user_id": fake.uuid4(), "username": fake.user_name()} for x in range(num_users)
+    {"user_id": fake.uuid4(), "username": usernames[x]} for x in range(NUM_USERS)
 ]
+
 
 # create shards for games stats databases
 shards = 3
@@ -39,13 +51,13 @@ def getShardId(string_uuid):
 end_date = datetime.date.today()
 
 
-for i in range(num_users):
+for i in range(NUM_USERS):
     user_id = fake_users[i].get("user_id")
     # insert user into proper shard
     shard_id = getShardId(user_id)
     shard_users[shard_id].append(fake_users[i])
     # generate games for this user
-    games_played = fake.random_int(min=50, max=500)
+    games_played = fake.random_int(min=1, max=100)
     # fake first game date for each user
     game_id = 0
     user_date = end_date - datetime.timedelta(days=games_played)

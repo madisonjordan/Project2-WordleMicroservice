@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS games;
 
 CREATE TABLE users(
     user_id GUID PRIMARY KEY,
-    username VARCHAR
+    username VARCHAR UNIQUE
 );
 
 CREATE TABLE games(
