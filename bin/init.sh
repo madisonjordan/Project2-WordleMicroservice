@@ -16,7 +16,7 @@ rm traefik.tar.gz
 # leaderboard app  #
 ####################
 
-pyinstaller --onefile ./bin/getTop10.py
+pyinstaller --onefile ./bin/python/getTop10.py
 
 #################
 #     stats     #
@@ -32,7 +32,7 @@ mkdir -p var/log
 sqlite3 ./var/$STATS_DB0 < ./share/stats.sql 
 sqlite3 ./var/$STATS_DB1 < ./share/stats.sql  && \
 sqlite3 ./var/$STATS_DB2 < ./share/stats.sql  && \
-python3 ./bin/stats_populate.py
+python3 ./bin/python/stats_populate.py
 
 
 
