@@ -1,3 +1,4 @@
+from os import stat
 import sqlite3
 import uuid
 import sqlite_utils
@@ -8,7 +9,7 @@ import collections
 import itertools
 
 from fastapi import FastAPI, Depends, Response, HTTPException, status, Request
-from pydantic import BaseSettings
+from pydantic import BaseModel, BaseSettings
 
 # use UUID in table
 sqlite3.register_converter("GUID", lambda b: uuid.UUID(bytes_le=b))
@@ -22,6 +23,13 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = "stats.env"
+
+
+class Game(BaseModel):
+    user_id: str
+    finished: datetime.date
+    guesses: int
+    won: bool
 
 
 settings = Settings()
@@ -117,6 +125,36 @@ def get_stats(user_id: str, response: Response):
         "gamesWon": wins[0],
         "averageGuesses": avg_guesses,
     }
+
+
+@app.post("/users/", status_code=status.HTTP_201_CREATED)
+def create_game_stats(game: Game, response: Response):
+    g = dict(game)
+    user = g.get("user_id")
+    shard = getShardId(user)
+    db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
+    db = sqlite3.connect(f"./var/stats{shard}.db")
+
+    try:
+        games_played = db.execute(
+            "SELECT COUNT(*) FROM games WHERE user_id=:user_id LIMIT 1", g
+        )
+        games_played = games_played.fetchone()[0]
+        g["game_id"] = games_played + 1
+        cur = db.execute(
+            """
+            INSERT INTO games(user_id, game_id, finished, guesses, won)
+            VALUES(:user_id, :game_id, :finished, :guesses, :won)
+            """,
+            g,
+        )
+        db.commit()
+    except sqlite3.IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"type": type(e).__name__, "msg": str(e)},
+        )
+    return g
 
 
 @app.get("/top10/streaks/all")
