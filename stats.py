@@ -127,7 +127,7 @@ def get_stats(user_id: str, response: Response):
     }
 
 
-@app.post("/users", status_code=status.HTTP_201_CREATED)
+@app.post("/users/", status_code=status.HTTP_201_CREATED)
 def create_game_stats(game: Game, response: Response):
     g = dict(game)
     user = g.get("user_id")
