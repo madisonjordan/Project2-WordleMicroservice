@@ -19,14 +19,8 @@ def top10_streaks_all_time():
         ).fetchall()
         temp.append(shard_top10[shard])
     all_list = list(itertools.chain(*temp))
-    for user in range(10):
-        user_streak = {
-            "user_id": all_list[user][0],
-            "username": all_list[user][1],
-            "streak": all_list[user][2],
-        }
-        top10.append(user_streak)
-    return top10
+    for user in range(30):
+        print("zadd", "streaks", all_list[user][2], '"' + all_list[user][1] + '"')
 
 
-print(top10_streaks_all_time())
+top10_streaks_all_time()
