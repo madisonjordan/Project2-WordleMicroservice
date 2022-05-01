@@ -12,7 +12,11 @@ mv ./temp/traefik .
 rm -rf temp
 rm traefik.tar.gz
 
+####################
+# leaderboard app  #
+####################
 
+pyinstaller --onefile ./bin/getTop10.py
 
 #################
 #     stats     #
