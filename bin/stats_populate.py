@@ -16,7 +16,7 @@ sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
 # create fake user data
 Faker = Factory.create
 NUM_STATS = 1_000_000
-NUM_USERS = 100_000
+NUM_USERS = 1000
 YEAR = 2022
 
 fake = Faker()
