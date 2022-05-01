@@ -8,8 +8,7 @@ Group Members:
 
 #### Initialize Databases:
 
-1. run `./bin/words/sh` from project root directory
-2. run `./bin/answers.sh` from project root directory
+1. run `./bin/init/sh` from project root directory
 
 #### Start the Services:
 

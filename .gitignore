@@ -1,3 +1,9 @@
+# databases
+**/*.db
+
+# binary dependencies
+traefik
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

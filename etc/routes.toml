@@ -1,0 +1,43 @@
+[http]
+  [http.middlewares]
+
+    [http.middlewares.api-stripprefix.stripPrefix]
+      prefixes = ["/api/v1"]
+
+  [http.routers]
+
+    [http.routers.answers]
+      service = "answers"
+      rule = "(PathPrefix(`/check`) || PathPrefix(`/answers`))"
+      middlewares = ["api-stripprefix"]
+
+    [http.routers.stats]
+      service = "statistics"
+      rule = "PathPrefix(`/users`) || PathPrefix(`/top10`)"
+      middlewares = ["api-stripprefix"]
+
+    [http.routers.words]
+      service = "words"
+      rule = "PathPrefix(`/words`)"
+      middlewares = ["api-stripprefix"]     
+
+  [http.services]
+
+    [http.services.words]
+      [http.services.words.loadBalancer]
+        [[http.services.words.loadBalancer.servers]]
+          url = "http://127.0.0.1:5100"
+
+    [http.services.answers]
+      [http.services.answers.loadBalancer]
+        [[http.services.answers.loadBalancer.servers]]
+          url = "http://127.0.0.1:5200"
+
+    [http.services.statistics]
+      [http.services.statistics.loadBalancer]
+        [[http.services.statistics.loadBalancer.servers]]
+          url = "http://127.0.0.1:5300"
+        [[http.services.statistics.loadBalancer.servers]]
+          url = "http://127.0.0.1:5301"
+        [[http.services.statistics.loadBalancer.servers]]
+          url = "http://127.0.0.1:5302"

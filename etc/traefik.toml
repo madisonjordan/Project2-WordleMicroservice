@@ -1,0 +1,12 @@
+[entryPoints]
+  [entryPoints.http]
+    address = ":9999"
+
+[providers]
+  [providers.file]
+    filename = "./etc/routes.toml"
+
+[api]
+  dashboard = true
+  debug = true
+  insecure = true
