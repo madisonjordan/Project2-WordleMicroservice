@@ -1,5 +1,6 @@
+# Top10 leaderboard script to be built as a standalone using pyinstaller
+# pyinstaller --onefile getTop10.py
 import sqlite3
-import uuid
 import collections
 import itertools
 
