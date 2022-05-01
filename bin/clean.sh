@@ -6,4 +6,5 @@ rm -r \
     bin/__pycache__ \
     dump.rdb \
     *.spec \
+    traefik \
     2> /dev/null 
