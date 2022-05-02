@@ -1,0 +1,1 @@
+*/10 * * * * run-one ./dist/getTop10 | redis-cli --pipe > ./var/log/cron.log

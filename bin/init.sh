@@ -1,41 +1,5 @@
 #!/bin/bash
 
-#############
-#  traefik  #
-#############
-
-# install traefik depdendency
-mkdir temp
-curl --silent -L -o traefik.tar.gz https://github.com/traefik/traefik/releases/download/v2.6.3/traefik_v2.6.3_linux_amd64.tar.gz
-tar -xf traefik.tar.gz -C temp 2>&1 1>/dev/null
-mv ./temp/traefik . 
-rm -rf temp
-rm traefik.tar.gz
-
-####################
-# leaderboard app  #
-####################
-
-pyinstaller --onefile ./bin/python/getTop10.py
-
-#################
-#     stats     #
-#################
-
-# populate database
-STATS_DB0='stats0.db'
-STATS_DB1='stats1.db'
-STATS_DB2='stats2.db'
-
-
-mkdir -p var/log
-sqlite3 ./var/$STATS_DB0 < ./share/stats.sql 
-sqlite3 ./var/$STATS_DB1 < ./share/stats.sql  && \
-sqlite3 ./var/$STATS_DB2 < ./share/stats.sql  && \
-python3 ./bin/python/stats_populate.py
-
-
-
 #################
 #   words.db    #
 #################
@@ -119,3 +83,43 @@ fi
 #   [word] TEXT                             #
 # );                                        #
 #############################################
+
+
+#################
+#     stats     #
+#################
+
+# populate database
+STATS_DB0='stats0.db'
+STATS_DB1='stats1.db'
+STATS_DB2='stats2.db'
+
+
+mkdir -p var/log
+sqlite3 ./var/$STATS_DB0 < ./share/stats.sql 
+sqlite3 ./var/$STATS_DB1 < ./share/stats.sql  && \
+sqlite3 ./var/$STATS_DB2 < ./share/stats.sql  && \
+python3 ./bin/python/stats_populate.py
+
+
+#############
+#  traefik  #
+#############
+
+# install traefik depdendency
+mkdir temp
+curl --silent -L -o traefik.tar.gz https://github.com/traefik/traefik/releases/download/v2.6.3/traefik_v2.6.3_linux_amd64.tar.gz
+tar -xf traefik.tar.gz -C temp 2>&1 1>/dev/null
+mv ./temp/traefik . 
+rm -rf temp
+rm traefik.tar.gz
+
+####################
+# leaderboard app  #
+####################
+
+# build standalone app
+pyinstaller --onefile ./bin/python/getTop10.py
+
+# start cronjob
+crontab ./bin/cron.leaderboard.txt
