@@ -8,3 +8,5 @@ rm -r \
     *.spec \
     traefik \
     2> /dev/null 
+#remove crontab
+crontab -r
