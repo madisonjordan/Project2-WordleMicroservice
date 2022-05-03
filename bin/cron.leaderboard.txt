@@ -1,1 +1,1 @@
-*/10 * * * * run-one ./dist/getTop10 | redis-cli --pipe > ./var/log/cron.log
+*/2 * * * * bash -l $(run-one $PROJ_PATH/bin/leaderboard.sh >> $PROJ_PATH/var/log/cron.log 2>&1)

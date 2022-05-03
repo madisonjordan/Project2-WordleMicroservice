@@ -1,11 +1,12 @@
 # Top10 leaderboard script to be built as a standalone using pyinstaller
 # pyinstaller --onefile getTop10.py
+import os
 import sqlite3
 import collections
 import itertools
 
 shards = 3
-database_dir = "./var/"
+database_dir = os.environ["PROJ_PATH"] + "/var/"
 
 # print Streaks - Top10 from each shard
 def top10_streaks_all_time():
