@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PROJ_PATH=$(pwd) >> ~/.bashrc && source ~/.bashrc
+echo "export PROJ_PATH=$(pwd)" >> ~/.bash_profile
 
 #################
 #   words.db    #
