@@ -1,1 +1,1 @@
-*/2 * * * * bash -l $(run-one $PROJ_PATH/bin/leaderboard.sh >> $PROJ_PATH/var/log/cron.log 2>&1)
+*/2 * * * * run-one bash -l $($PROJ_PATH/bin/leaderboard.sh >> $PROJ_PATH/var/log/cron.log 2>&1)
