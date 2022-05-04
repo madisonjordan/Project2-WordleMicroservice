@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "export PROJ_PATH=$(pwd)" >> ~/.bash_profile && . ~/.bash_profile
+echo "export PROJ_PATH=$(pwd)" >> ~/.bash_profile
 
 #############
 #  traefik  #
@@ -19,7 +19,7 @@ rm traefik.tar.gz
 ####################
 
 # build standalone app
-pyinstaller --onefile $PROJ_PATH/bin/python/getTop10.py
+pyinstaller --onefile ./bin/python/getTop10.py
 
 # load crontab
-crontab $PROJ_PATH/bin/cron.leaderboard.txt
+crontab ./bin/cron.leaderboard.txt && mkdir -p ./var/log
