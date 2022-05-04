@@ -18,13 +18,14 @@ from typing import Optional
 class Settings(BaseSettings):
     database: str
     logging_config: str
+    openapi_url: str
 
     class Config:
         env_file = "answers.env"
 
 
 settings = Settings()
-app = FastAPI(root_path="/api/answers", openapi_url="/api/answers/openapi.json")
+app = FastAPI(root_path="/api/answers", openapi_url=settings.openapi_url)
 
 
 class Answer(BaseModel):

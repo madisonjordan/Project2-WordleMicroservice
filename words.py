@@ -9,6 +9,8 @@ from pydantic import BaseSettings
 class Settings(BaseSettings):
     database: str
     logging_config: str
+    openapi_url: str
+
 
     class Config:
         env_file = "words.env"
@@ -25,7 +27,7 @@ def get_logger():
 
 
 settings = Settings()
-app = FastAPI(root_path="/api/words", openapi_url="/api/words/openapi.json")
+app = FastAPI(root_path="/api/words", openapi_url=settings.openapi_url)
 
 logging.config.fileConfig(settings.logging_config)
 

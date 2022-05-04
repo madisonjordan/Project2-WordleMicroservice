@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     database_dir: str
     logging_config: str
     shards: int
+    openapi_url: str
 
     class Config:
         env_file = "stats.env"
@@ -41,7 +42,8 @@ app = FastAPI(
         {"url": "http://127.0.0.1:5302"},
     ],
     root_path="/api/statistics",
-    openapi_url="/api/statistics/openapi.json",
+    openapi_url=settings.openapi_url
+    
 )
 r = redis.Redis(
     host="localhost", port=6379, db=0, charset="utf-8", decode_responses=True
