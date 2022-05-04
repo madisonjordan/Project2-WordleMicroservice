@@ -13,3 +13,4 @@ Group Members:
 #### Start the Services:
 
 1. foreman start
+2. `sudo service cron start` to start cron
