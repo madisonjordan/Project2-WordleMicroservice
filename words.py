@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     logging_config: str
     openapi_url: str
 
-
     class Config:
         env_file = "words.env"
 
