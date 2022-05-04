@@ -41,7 +41,8 @@ app = FastAPI(
         {"url": "http://127.0.0.1:5302"},
     ],
     root_path="/api/statistics",
-    openapi_url="/api/statistics/openapi.json")
+    openapi_url="/api/statistics/openapi.json",
+)
 r = redis.Redis(
     host="localhost", port=6379, db=0, charset="utf-8", decode_responses=True
 )
