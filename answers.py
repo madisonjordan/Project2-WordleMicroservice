@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-app = FastAPI()
+app = FastAPI(root_path="/api/answers", openapi_url="/api/answers/openapi.json")
 
 
 class Answer(BaseModel):
