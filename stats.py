@@ -34,7 +34,14 @@ class Game(BaseModel):
 
 
 settings = Settings()
-app = FastAPI(openapi_url="/api/v1/openapi.json")
+app = FastAPI(
+    servers=[
+        {"url": "http://127.0.0.1:5300"},
+        {"url": "http://127.0.0.1:5301"},
+        {"url": "http://127.0.0.1:5302"},
+    ],
+    root_path="/api/statistics",
+    openapi_url="/api/statistics/openapi.json")
 r = redis.Redis(
     host="localhost", port=6379, db=0, charset="utf-8", decode_responses=True
 )
@@ -53,7 +60,7 @@ def list_users():
         yield {"stats_db": shard, "users": users.fetchall()}
 
 
-@app.get("/users/{user_id}")
+@app.get("/stats/users/{user_id}")
 def get_user(user_id: str, response: Response):
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
@@ -164,10 +171,14 @@ def create_game_stats(game: Game, response: Response):
 @app.get("/top10/streaks/all")
 def top10_streaks_all_time():
     top10streaks = r.zrevrange(name="streaks", start=0, end=9, withscores=True)
-    return json.dumps(top10streaks)
+    result = json.dumps(top10streaks)
+    top10 = json.loads(result)
+    return top10
 
 
 @app.get("/top10/wins")
 def top10_wins():
     top10wins = r.zrevrange(name="wins", start=0, end=9, withscores=True)
-    return json.dumps(top10wins)
+    result = json.dumps(top10wins)
+    top10 = json.loads(result)
+    return top10

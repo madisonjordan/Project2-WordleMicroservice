@@ -25,7 +25,7 @@ def get_logger():
 
 
 settings = Settings()
-app = FastAPI()
+app = FastAPI(root_path="/api/words", openapi_url="/api/words/openapi.json")
 
 logging.config.fileConfig(settings.logging_config)
 
