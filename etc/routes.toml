@@ -2,23 +2,23 @@
   [http.middlewares]
 
     [http.middlewares.api-stripprefix.stripPrefix]
-      prefixes = ["/api/v1"]
+      prefixes = ["/api/statistics", "/api/words", "/api/answers"]
 
   [http.routers]
 
     [http.routers.answers]
       service = "answers"
-      rule = "(PathPrefix(`/check`) || PathPrefix(`/answers`))"
+      rule = "PathPrefix(`/api/answers`)"
       middlewares = ["api-stripprefix"]
 
     [http.routers.stats]
       service = "statistics"
-      rule = "PathPrefix(`/users`) || PathPrefix(`/top10`)"
+      rule = "PathPrefix(`/api/statistics`)"
       middlewares = ["api-stripprefix"]
 
     [http.routers.words]
       service = "words"
-      rule = "PathPrefix(`/words`)"
+      rule = "PathPrefix(`/api/words`)"
       middlewares = ["api-stripprefix"]     
 
   [http.services]
