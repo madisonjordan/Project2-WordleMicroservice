@@ -1,4 +1,3 @@
-from os import stat
 import sqlite3
 import uuid
 import sqlite_utils
@@ -7,6 +6,8 @@ import contextlib
 import logging.config
 import collections
 import itertools
+import redis
+import json
 
 from fastapi import FastAPI, Depends, Response, HTTPException, status, Request
 from pydantic import BaseModel, BaseSettings
@@ -34,6 +35,9 @@ class Game(BaseModel):
 
 settings = Settings()
 app = FastAPI(openapi_url="/api/v1/openapi.json")
+r = redis.Redis(
+    host="localhost", port=6379, db=0, charset="utf-8", decode_responses=True
+)
 
 
 def getShardId(string_uuid):
@@ -159,49 +163,11 @@ def create_game_stats(game: Game, response: Response):
 
 @app.get("/top10/streaks/all")
 def top10_streaks_all_time():
-    shard_top10 = collections.defaultdict(list)
-    temp = []
-    all_list = []
-    top10 = []
-    for shard in range(settings.shards):
-        db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-        shard_top10[shard] = db.execute(
-            "SELECT streaks.user_id, users.username, streaks.streak FROM streaks INNER JOIN users ON streaks.user_id=users.user_id ORDER BY streak DESC LIMIT 10"
-        ).fetchall()
-        temp.append(shard_top10[shard])
-    all_list = list(itertools.chain(*temp))
-    # sort by streaks (index 2)
-    all_list.sort(reverse=True, key=lambda x: x[2])
-    for user in range(10):
-        user_streak = {
-            "user_id": all_list[user][0],
-            "username": all_list[user][1],
-            "streak": all_list[user][2],
-        }
-        top10.append(user_streak)
-    return top10
+    top10streaks = r.zrevrange(name="streaks", start=0, end=9, withscores=True)
+    return json.dumps(top10streaks)
 
 
 @app.get("/top10/wins")
 def top10_wins():
-    shard_top10 = collections.defaultdict(list)
-    temp = []
-    all_list = []
-    top10 = []
-    for shard in range(settings.shards):
-        db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-        shard_top10[shard] = db.execute(
-            "SELECT wins.user_id, users.username, wins.wins FROM wins INNER JOIN users ON wins.user_id=users.user_id ORDER BY wins DESC LIMIT 10"
-        ).fetchall()
-        temp.append(shard_top10[shard])
-    all_list = list(itertools.chain(*temp))
-    # sort by wins (index 2)
-    all_list.sort(reverse=True, key=lambda x: x[2])
-    for user in range(10):
-        user_wins = {
-            "user_id": all_list[user][0],
-            "username": all_list[user][1],
-            "wins": all_list[user][2],
-        }
-        top10.append(user_wins)
-    return top10
+    top10wins = r.zrevrange(name="wins", start=0, end=9, withscores=True)
+    return json.dumps(top10wins)
