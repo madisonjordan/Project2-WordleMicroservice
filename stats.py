@@ -62,7 +62,7 @@ def list_users():
         yield {"stats_db": shard, "users": users.fetchall()}
 
 
-@app.get("/stats/users/{user_id}")
+@app.get("/users/{user_id}")
 def get_user(user_id: str, response: Response):
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
