@@ -9,6 +9,7 @@
   - [ ] launches services
   - [ ] reverse proxy
   - [ ] load balancing
+  - [ ] runs cron job
 
 #### Design Requirements
 
@@ -16,8 +17,8 @@
 
 - [ ] maintains statelessness (independent services)
   - [ ] separate python files for each service
-  - [ ] doesn't store current day's answer on the server side
-  - [ ] doesn't track number of guesses made by a client
+  - [ ] Answer Service doesn't store current day's answer on the server side
+  - [ ] Answer Service doesn't track number of guesses made by a client
 
 #### Readability / Maintainability
 
