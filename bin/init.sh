@@ -1,6 +1,9 @@
 #!/bin/bash
 
-echo "export PROJ_PATH=$(pwd)" >> ~/.bash_profile
+echo "export PROJ_PATH=$(pwd)" > ~/.bash_profile && . ~/.bash_profile
+
+# start redis-server in background
+redis-server --daemonize yes
 
 #############
 #  traefik  #
@@ -17,6 +20,7 @@ rm traefik.tar.gz
 ####################
 # leaderboard app  #
 ####################
+
 
 # build standalone app
 pyinstaller --onefile ./bin/python/getTop10.py
