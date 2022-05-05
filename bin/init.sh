@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "export PROJ_PATH=$(pwd)" > ~/.bash_profile && . ~/.bash_profile
+echo "export PROJ_PATH=$(pwd)" > ~/wordle.env && . ~/wordle.env
 
 # start redis-server in background
 redis-server --daemonize yes
