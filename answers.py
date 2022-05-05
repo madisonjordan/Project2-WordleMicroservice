@@ -28,6 +28,7 @@ class Answer(BaseModel):
     day: Optional[str] = datetime.date.today().strftime("%Y-%m-%d")
     word: str
 
+
 settings = Settings()
 app = FastAPI(root_path="/api/answer", openapi_url=settings.openapi_url)
 
@@ -54,6 +55,7 @@ def get_answer(day: str, response: Response, db: sqlite3.Connection = Depends(ge
         )
     return wotd
 
+
 @app.get("/answers")
 def get_all_answers(response: Response, db: sqlite3.Connection = Depends(get_db)):
     cur = db.execute("SELECT * FROM answers")
@@ -62,7 +64,9 @@ def get_all_answers(response: Response, db: sqlite3.Connection = Depends(get_db)
 
 
 @app.put("/answers")
-def change_answer(answer: Answer, response: Response,
+def change_answer(
+    answer: Answer,
+    response: Response,
     db: sqlite3.Connection = Depends(get_db),
 ):
     word = dict(answer)
