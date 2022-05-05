@@ -1,5 +1,6 @@
 # databases
 **/*.db
+**/dump.rdb
 
 # binary dependencies
 traefik

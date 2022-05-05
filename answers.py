@@ -18,18 +18,19 @@ from typing import Optional
 class Settings(BaseSettings):
     database: str
     logging_config: str
+    openapi_url: str
 
     class Config:
         env_file = "answers.env"
 
 
-settings = Settings()
-app = FastAPI()
-
-
 class Answer(BaseModel):
-    day: Optional[str] = None
-    word: Optional[str] = None
+    day: Optional[str] = datetime.date.today().strftime("%Y-%m-%d")
+    word: str
+
+
+settings = Settings()
+app = FastAPI(root_path="/api/answer", openapi_url=settings.openapi_url)
 
 
 def get_db():
@@ -55,16 +56,23 @@ def get_answer(day: str, response: Response, db: sqlite3.Connection = Depends(ge
     return wotd
 
 
+@app.get("/answers")
+def get_all_answers(response: Response, db: sqlite3.Connection = Depends(get_db)):
+    cur = db.execute("SELECT * FROM answers")
+    wotd = cur.fetchall()
+    return wotd
+
+
 @app.put("/answers")
 def change_answer(
-    day: str,
-    answer: str,
+    answer: Answer,
+    response: Response,
     db: sqlite3.Connection = Depends(get_db),
 ):
-    results = {"day": day, "word": answer}
+    word = dict(answer)
     sql = "update answers set word=:word where day=:day"
-    cur = db.execute(sql, results)
-    cur = db.execute("SELECT * FROM answers WHERE day = ? LIMIT 1", [day])
+    cur = db.execute(sql, word)
+    cur = db.execute("SELECT * FROM answers WHERE day=:day LIMIT 1", word)
     db.commit()
     wotd = cur.fetchall()
     if not wotd:

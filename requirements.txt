@@ -1,2 +1,6 @@
 fastapi[all]
 pydantic
+sqlite-utils
+pyinstaller
+faker
+httpx
