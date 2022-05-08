@@ -13,24 +13,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2022-04-30
 
-- Add traefik load balancing
-- Add user game stats to statistics service
-- Add Top10 wins to stats service
-- Add Top10 streaks to stats service
-- Add sharded database for statistics service
+### Added
+
+- Added traefik load balancing
+- Added user game stats to statistics service
+- Added Top10 wins to stats service
+- Added Top10 streaks to stats service
+- Added sharded database for statistics service
+
+### Fixed
+
+- Fixed unique username generation in statistics database
 
 ## [1.0.0] - 2022-04-29
 
 ### Added
 
-- Add change future answers function to answer service
+- Added change future answers function to answer service
 
 ## [0.9.1] - 2022-04-08
 
 ### Added
 
-- Add answers database
-- Add word database
-- Add word validation service
-- Add answer checking service
-- Add foreman config
+- Added answers database
+- Added word database
+- Added word validation service
+- Added answer checking service
+- Added foreman config

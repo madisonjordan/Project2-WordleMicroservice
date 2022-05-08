@@ -89,7 +89,27 @@ fi
 #     stats     #
 #################
 
-# populate database
+#download population script
+if [ ! -f "./share/sqlite3-populated.sql" ]
+then
+    mkdir -p ./share && \
+    curl --silent -L -o sqlite3-populated.sql https://raw.githubusercontent.com/ProfAvery/cpsc449/master/stats/share/sqlite3-populated.sql && \
+    mv ./sqlite3-populated.sql ./share
+else
+    echo "sqlite3-populated.sql already exists"
+fi
+
+
+# build full statistics.db if it doesn't exist
+if [ ! -f "./var/stats_full.db" ]
+then
+    sqlite3 ./var/stats_full.db < ./share/sqlite3-populated.sql
+else
+    echo "statistics.db already exists"
+fi
+
+
+# shard stats database
 STATS_DB0='stats0.db'
 STATS_DB1='stats1.db'
 STATS_DB2='stats2.db'
@@ -98,5 +118,5 @@ STATS_DB2='stats2.db'
 mkdir -p var/log
 sqlite3 ./var/$STATS_DB0 < ./share/stats.sql 
 sqlite3 ./var/$STATS_DB1 < ./share/stats.sql  && \
-sqlite3 ./var/$STATS_DB2 < ./share/stats.sql  && \
-python3 ./bin/python/stats_populate.py
+sqlite3 ./var/$STATS_DB2 < ./share/stats.sql # && \
+#python3 ./bin/python/stats_populate.py
