@@ -2,6 +2,8 @@
 **/*.db
 **/dump.rdb
 
+**/sqlite3-populated.sql
+
 # binary dependencies
 traefik
 
