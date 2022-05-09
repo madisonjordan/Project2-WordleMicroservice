@@ -6,12 +6,12 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS games;
 
 CREATE TABLE users(
-    user_id GUID PRIMARY KEY,
+    user_id INTEGER PRIMARY KEY,
     username VARCHAR UNIQUE
 );
 
 CREATE TABLE games(
-    user_id GUID NOT NULL,
+    user_id INTEGER NOT NULL,
     game_id INTEGER NOT NULL,
     finished DATE DEFAULT CURRENT_TIMESTAMP,
     guesses INTEGER,
