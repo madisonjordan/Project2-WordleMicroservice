@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+### Changed
+
+- Changed stats database shards to use original sqlite-populated.sql data
+
 ## [2.0.0] - 2022-04-30
 
 ### Added
