@@ -12,9 +12,10 @@ then
     mkdir -p var/log
     grep -x '[a-z]\{5\}' /usr/share/dict/words \
     | sqlite-utils insert "./var/$DB" words - \
-        --text --convert '({"word": w} for w in text.split())' --pk=word
+        --text --convert '({"word": w} for w in text.split())' --pk=word && \
+    echo "Created '$DB'"
 else
-    echo "$DB already exists"
+    echo "'$DB' already exists"
 fi
 
 #####################################
@@ -71,9 +72,10 @@ then
     echo -e $parseanswer | sqlite-utils insert ./var/$DB answers - \
     --text --convert '({"word": w} for w in text.split())' \
     && cat ./bin/python/date_gen.py | sqlite-utils convert ./var/$DB answers rowid - --output day \
-    && sqlite-utils transform ./var/$DB answers --pk day --column-order day --column-order word
+    && sqlite-utils transform ./var/$DB answers --pk day --column-order day --column-order word && \
+    echo "Created '$DB'"
 else
-    echo "$DB already exists"
+    echo "'$DB' already exists"
 fi
 
 
@@ -89,14 +91,42 @@ fi
 #     stats     #
 #################
 
-# populate database
+#download population script
+if [ ! -f "./share/sqlite3-populated.sql" ]
+then
+    mkdir -p ./share && \
+    curl --silent -L -o sqlite3-populated.sql https://raw.githubusercontent.com/ProfAvery/cpsc449/master/stats/share/sqlite3-populated.sql && \
+    mv ./sqlite3-populated.sql ./share && \
+    echo "Downloaded 'sqlite3-populated.sql'"
+else
+    echo "'sqlite3-populated.sql' already exists"
+fi
+
+
+# build full statistics.db if it doesn't exist
+if [ ! -f "./var/stats_full.db" ]
+then
+    sqlite3 ./var/stats_full.db < ./share/sqlite3-populated.sql && \
+    echo "Populated 'stats_full.db'"
+else
+    echo "'stats_full.db' already exists"
+fi
+
+
+# create stats shards
 STATS_DB0='stats0.db'
 STATS_DB1='stats1.db'
 STATS_DB2='stats2.db'
 
 
 mkdir -p var/log
-sqlite3 ./var/$STATS_DB0 < ./share/stats.sql 
+sqlite3 ./var/$STATS_DB0 < ./share/stats.sql  && \
 sqlite3 ./var/$STATS_DB1 < ./share/stats.sql  && \
-sqlite3 ./var/$STATS_DB2 < ./share/stats.sql  && \
-python3 ./bin/python/stats_populate.py
+sqlite3 ./var/$STATS_DB2 < ./share/stats.sql  
+
+# shard database
+python3 ./bin/python/stats_shard.py
+
+# remove full stats.db
+rm ./var/stats_full.db && \
+echo "Removed 'stats_full.db'"
