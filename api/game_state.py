@@ -40,6 +40,10 @@ def get_game(user_id: str, game_id: int):
 @app.post("/state/")
 def new_game(game: Game):
     res = r.hmget(game.user_id, game.game_id)
+    if res[0] != None:
+        raise HTTPException(
+            status_code=409, detail="Game ID already exists for this user"
+        )
     # create new game in json format so it can be set in redis
     new_game = {
         "status": "new",
@@ -65,12 +69,16 @@ def add_guess(guess: str, game: Game):
         raise HTTPException(status_code=400, detail="Failed to add guess")
     # gets game object from redis
     game_information = json.loads(res[0])
-    if game_information["guesses_left"] == 0:
-        raise HTTPException(status_code=400, detail="User has no guesses left")
-    # modifies game_information
-    game_information["status"] = "in-progress"
+    # check if game is already complete
+    if game_information["status"] == "finished":
+        raise HTTPException(status_code=400, detail="This game has ended")
+    # add new guess and update remaining attempts
     game_information["guesses_left"] -= 1
     game_information["words_guessed"].append(guess)
+    # update status
+    game_information["status"] = "in-progress"
+    if game_information["guesses_left"] == 0:
+        game_information["status"] = "finished"
     # save changes
     mapping = json.dumps(game_information)
     r.hmset(
