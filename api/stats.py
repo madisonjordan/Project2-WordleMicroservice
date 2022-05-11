@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     database_dir: str
     logging_config: str
     shards: int
-    openapi_url: str = ""
+    openapi_url: str = "/openapi.json"
 
     class Config:
         env_file = "stats.env"

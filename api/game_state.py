@@ -7,7 +7,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     logging_config: str = ""
-    openapi_url: str = ""
+    openapi_url: str = "/openapi.json"
 
     class Config:
         env_file = "game_state.env"
