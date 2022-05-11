@@ -2,7 +2,7 @@
   [http.middlewares]
 
     [http.middlewares.api-stripprefix.stripPrefix]
-      prefixes = ["/api/stats", "/api/word", "/api/answer"]
+      prefixes = ["/api/statistics", "/api/word", "/api/answer"]
 
   [http.routers]
 

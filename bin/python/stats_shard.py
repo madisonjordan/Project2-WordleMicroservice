@@ -7,6 +7,8 @@ import uuid
 import collections
 
 import faker
+from faker.factory import Factory
+
 
 NUM_STATS = 1_000_000
 NUM_USERS = 100_000
@@ -15,7 +17,8 @@ YEAR = 2022
 shards = 3
 
 random.seed(YEAR)
-fake = faker.Faker()
+Faker = Factory.create
+fake = Faker()
 fake.seed(YEAR)
 
 sqlite3.register_converter("GUID", lambda b: uuid.UUID(bytes_le=b))

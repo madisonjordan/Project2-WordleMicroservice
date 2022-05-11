@@ -9,7 +9,7 @@ from pydantic import BaseSettings
 class Settings(BaseSettings):
     database: str
     logging_config: str
-    openapi_url: str
+    openapi_url: str = ""
 
     class Config:
         env_file = "words.env"

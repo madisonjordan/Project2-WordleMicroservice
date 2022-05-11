@@ -10,4 +10,4 @@
 
 1. `sudo service cron start` to start cron if it's not already running
 2. run `./bin/init.sh` from project root directory
-3. foreman start
+3. `foreman start --env openapi.env` to access with autodocumentation
