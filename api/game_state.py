@@ -25,7 +25,7 @@ class Game(BaseModel):
 
 
 # get game status
-@app.get("/state/")
+@app.get("/game/")
 def get_game(user_id: str, game_id: int):
     res = r.hmget(user_id, game_id)
     # if game is already played return error
@@ -37,7 +37,7 @@ def get_game(user_id: str, game_id: int):
 
 
 # start a new game
-@app.post("/state/")
+@app.post("/game/")
 def new_game(game: Game):
     res = r.hmget(game.user_id, game.game_id)
     if res[0] != None:
@@ -61,7 +61,7 @@ def new_game(game: Game):
     return new_game
 
 
-@app.post("/state/update")
+@app.post("/game/update")
 def add_guess(guess: str, game: Game):
     res = r.hmget(game.user_id, game.game_id)
     # if game is already played return error
