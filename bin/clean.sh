@@ -3,7 +3,7 @@ rm -r \
     build \
     dist \
     var \
-    __pycache__ \
+    ./**/__pycache__ \
     dump.rdb \
     *.spec \
     traefik \
