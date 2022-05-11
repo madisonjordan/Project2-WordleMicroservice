@@ -28,8 +28,6 @@ def get_logger():
 settings = Settings()
 app = FastAPI(root_path="/api/word", openapi_url=settings.openapi_url)
 
-logging.config.fileConfig(settings.logging_config)
-
 # list all valid guesses from word database
 @app.get("/words/")
 def list_words(db: sqlite3.Connection = Depends(get_db)):

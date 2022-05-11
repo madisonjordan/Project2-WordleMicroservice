@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     openapi_url: str
 
     class Config:
-        env_file = "answers.env"
+        env_file = "./answers.env"
 
 
 class Answer(BaseModel):
