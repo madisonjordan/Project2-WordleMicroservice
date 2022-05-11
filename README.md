@@ -2,6 +2,20 @@
 
 ## Execution Instructions
 
+#### Install Dependencies
+
+- Install System Dependencies
+
+  ```
+    sudo apt update
+    sudo apt install --yes python3-pip ruby-foreman sqlite3 httpie redis
+  ```
+
+- Install Python Dependencies
+  ```
+    python3 -m pip install -r requirements.txt
+  ```
+
 #### Initialize Databases:
 
 1. run `./bin/init_db.sh` from project root directory
