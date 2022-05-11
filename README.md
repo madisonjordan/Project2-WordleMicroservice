@@ -1,20 +1,23 @@
 # Project 4 - Wordle Microservice
 
+## System Setup
+
+OS: Tuffix (Ubuntu)
+
+#### Install System Dependencies
+
+```
+  sudo apt update
+  sudo apt install --yes python3-pip ruby-foreman sqlite3 httpie redis
+```
+
+#### Install Python Dependencies
+
+```
+  python3 -m pip install -r requirements.txt
+```
+
 ## Execution Instructions
-
-#### Install Dependencies
-
-- Install System Dependencies
-
-  ```
-    sudo apt update
-    sudo apt install --yes python3-pip ruby-foreman sqlite3 httpie redis
-  ```
-
-- Install Python Dependencies
-  ```
-    python3 -m pip install -r requirements.txt
-  ```
 
 #### Initialize Databases:
 
