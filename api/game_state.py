@@ -25,8 +25,8 @@ class Game(BaseModel):
 
 
 # get game status
-@app.get("/state/game/")
-def get_state(user_id: str, game_id: int):
+@app.get("/state/")
+def get_game(user_id: str, game_id: int):
     res = r.hmget(user_id, game_id)
     # if game is already played return error
     if res[0] == None:
@@ -37,7 +37,7 @@ def get_state(user_id: str, game_id: int):
 
 
 # start a new game
-@app.post("/state/game/")
+@app.post("/state/")
 def new_game(game: Game):
     res = r.hmget(game.user_id, game.game_id)
     # create new game in json format so it can be set in redis
@@ -55,3 +55,26 @@ def new_game(game: Game):
         {game.game_id: mapping},
     )
     return new_game
+
+
+@app.post("/state/update")
+def add_guess(guess: str, game: Game):
+    res = r.hmget(game.user_id, game.game_id)
+    # if game is already played return error
+    if res[0] == None:
+        raise HTTPException(status_code=400, detail="Failed to add guess")
+    # gets game object from redis
+    game_information = json.loads(res[0])
+    if game_information["guesses_left"] == 0:
+        raise HTTPException(status_code=400, detail="User has no guesses left")
+    # modifies game_information
+    game_information["status"] = "in-progress"
+    game_information["guesses_left"] -= 1
+    game_information["words_guessed"].append(guess)
+    # save changes
+    mapping = json.dumps(game_information)
+    r.hmset(
+        game.user_id,
+        {game.game_id: mapping},
+    )
+    return game_information
