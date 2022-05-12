@@ -98,8 +98,9 @@ def get_user_id(username: str):
     return result
 
 
-@app.get("/users/{user_id}/stats", response_model=UserStats)
-def get_stats(user_id: str):
+@app.get("/users/{username}/stats", response_model=UserStats)
+def get_stats(username: str):
+    user_id = get_user_id(username).get("user_id")
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
     max_streak = db.execute(
