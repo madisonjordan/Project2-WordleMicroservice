@@ -159,7 +159,7 @@ def add_guess(guess: str, game: Game):
     if game_state["remaining"] == 0:
         game_state["status"] = "finished"
     # save changes
-    mapping = json.dumps(game_information)
+    mapping = json.dumps(game_state)
     r.hmset(
         game.user_id,
         {game.game_id: mapping},
