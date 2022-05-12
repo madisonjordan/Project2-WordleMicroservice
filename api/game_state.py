@@ -68,8 +68,8 @@ def get_game(user_id: str, game_id: int):
             detail="User has not started this game.",
         )
     # gets game object from redis
-    game_information = json.loads(res[0])
-    return game_information
+    game_state = json.loads(res[0])
+    return game_state
 
 
 # start a new game
@@ -147,21 +147,21 @@ def add_guess(guess: str, game: Game):
     if res[0] == None:
         raise HTTPException(status_code=400, detail="Failed to add guess")
     # gets game object from redis
-    game_information = json.loads(res[0])
+    game_state = json.loads(res[0])
     # check if game is already complete
-    if game_information["status"] == "finished":
+    if game_state["status"] == "finished":
         raise HTTPException(status_code=403, detail="This game has ended")
     # add new guess and update remaining attempts
-    game_information["remaining"] -= 1
-    game_information["guesses"].append(guess)
+    game_state["remaining"] -= 1
+    game_state["guesses"].append(guess)
     # update status
-    game_information["status"] = "in-progress"
-    if game_information["remaining"] == 0:
-        game_information["status"] = "finished"
+    game_state["status"] = "in-progress"
+    if game_state["remaining"] == 0:
+        game_state["status"] = "finished"
     # save changes
     mapping = json.dumps(game_information)
     r.hmset(
         game.user_id,
         {game.game_id: mapping},
     )
-    return game_information
+    return game_state
