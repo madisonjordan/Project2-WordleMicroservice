@@ -44,7 +44,7 @@ class UserStats(BaseModel):
     currentStreak: int
     maxStreak: int
     guesses: dict
-    winPercentage: int
+    winPercentage: float
     gamesPlayed: int
     gamesWon: int
     averageGuesses: float
@@ -129,23 +129,23 @@ def get_stats(user_id: str):
     losses = games_played[0] - wins[0]
     # count of guesses in each win, or count of fails
     guesses = db.execute(
-        "SELECT COUNT(guesses) FROM games WHERE user_id = ? AND won = TRUE GROUP BY guesses",
+        "SELECT guesses, COUNT(guesses) FROM games WHERE user_id = ? AND won = TRUE GROUP BY guesses",
         [user_id],
     )
     guesses_query = guesses.fetchall()
     guesses = {}
     for i in range(len(guesses_query)):
-        num_guesses = guesses_query[i][0]
-        guess = i + 1
-        key = f"{guess}"
+        num_guesses = guesses_query[i][1]
+        key = guesses_query[i][0]
         entry = {key: num_guesses}
         guesses.update(entry)
     guesses.update({"failed": losses})
     # average guesses for wins
     sum = 0
-    for i in range(len(guesses_query)):
-        key = i + 1
-        sum += key * guesses[f"{key}"]
+    guess_keys = list(guesses.keys())
+    guess_values = list(guesses.values())
+    for i in range(len(guess_keys) - 1):
+        sum += guess_keys[i] * guess_values[i]
     avg_guesses = sum / wins[0]
 
     avg_wins = wins[0] / games_played[0]
