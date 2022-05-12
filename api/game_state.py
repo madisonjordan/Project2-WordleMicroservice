@@ -77,7 +77,10 @@ def get_game(user_id: str, game_id: int):
     "/game/",
     response_model=State,
     responses={
-        404: {"model": Message, "description": "The game was not found"},
+        403: {
+            "model": Message,
+            "description": "A game with this game id already exists for this user",
+        },
         201: {
             "description": "Created New Game",
             "content": {
@@ -98,7 +101,7 @@ def new_game(game: Game):
     res = r.hmget(game.user_id, game.game_id)
     if res[0] != None:
         return JSONResponse(
-            status_code=409, content={"message": "Game ID already exists for this user"}
+            status_code=403, content={"message": "Game ID already exists for this user"}
         )
     # create new game in json format so it can be set in redis
     new_game = {
@@ -114,10 +117,30 @@ def new_game(game: Game):
         game.user_id,
         {game.game_id: mapping},
     )
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=new_game)
+    return new_game
 
 
-@app.post("/game/update", response_model=State, responses={404: {"model": Message}})
+@app.post(
+    "/game/update",
+    response_model=State,
+    responses={
+        404: {"model": Message, "description": "The game was not found"},
+        200: {
+            "description": "Added new guess",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "in-progress",
+                        "user_id": "6b6c3a30-c0dd-4df5-acfc-a00fc51fb5f3",
+                        "game_id": 48,
+                        "remaining": 5,
+                        "guesses": ["forge"],
+                    }
+                }
+            },
+        },
+    },
+)
 def add_guess(guess: str, game: Game):
     res = r.hmget(game.user_id, game.game_id)
     # if game is already played return error
@@ -127,7 +150,7 @@ def add_guess(guess: str, game: Game):
     game_information = json.loads(res[0])
     # check if game is already complete
     if game_information["status"] == "finished":
-        raise HTTPException(status_code=400, detail="This game has ended")
+        raise HTTPException(status_code=403, detail="This game has ended")
     # add new guess and update remaining attempts
     game_information["remaining"] -= 1
     game_information["guesses"].append(guess)
