@@ -29,9 +29,15 @@ class Settings(BaseSettings):
 
 class Game(BaseModel):
     user_id: str
+    game_id: int = int(datetime.date.today().strftime("%Y%m%d"))
     finished: datetime.date
     guesses: int
     won: bool
+
+
+class User(BaseModel):
+    user_id: str
+    username: str
 
 
 settings = Settings()
@@ -62,22 +68,31 @@ def list_users():
         yield {"stats_db": shard, "users": users.fetchall()}
 
 
-@app.get("/users/{user_id}")
-def get_user(user_id: str, response: Response):
-    shard = getShardId(user_id)
-    db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-    cur = db.execute("SELECT * FROM users WHERE user_id = ?", [user_id])
-    user = cur.fetchall()
+@app.get("/users/{username}", response_model=User)
+def get_user_id(username: str):
+    for shard in range(settings.shards):
+        db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
+        cur = db.execute("SELECT * FROM users WHERE username = ? LIMIT 1", [username])
+        user = cur.fetchone()
+        if user:
+            result = {"user_id": user[0], "username": user[1]}
+            break
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User does not exist",
         )
-    return {"user": user}
+    return result
 
 
-@app.get("/users/{user_id}/stats")
-def get_stats(user_id: str, response: Response):
+@app.get("/users/{username}/stats")
+def get_stats(username: str):
+    user_id = get_user_id(username).get("user_id")
+    if user_id == None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User does not exist",
+        )
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
     max_streak = db.execute(
@@ -89,7 +104,7 @@ def get_stats(user_id: str, response: Response):
     if not max_streak:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User does not exist",
+            detail="No game stats found for this user",
         )
     curr_streak = db.execute(
         "SELECT streak FROM streaks WHERE user_id = ? ORDER BY ending DESC LIMIT 1",
@@ -146,14 +161,7 @@ def create_game_stats(game: Game, response: Response):
     user = g.get("user_id")
     shard = getShardId(user)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-    db = sqlite3.connect(f"./var/stats{shard}.db")
-
     try:
-        games_played = db.execute(
-            "SELECT COUNT(*) FROM games WHERE user_id=:user_id LIMIT 1", g
-        )
-        games_played = games_played.fetchone()[0]
-        g["game_id"] = games_played + 1
         cur = db.execute(
             """
             INSERT INTO games(user_id, game_id, finished, guesses, won)
