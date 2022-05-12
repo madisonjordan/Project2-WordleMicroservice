@@ -24,14 +24,35 @@ class Settings(BaseSettings):
     openapi_url: str = "/openapi.json"
 
     class Config:
-        env_file = "stats.env"
+        env_file = "./stats.env"
 
 
 class Game(BaseModel):
     user_id: str
+    game_id: int = int(datetime.date.today().strftime("%Y%m%d"))
     finished: datetime.date
     guesses: int
     won: bool
+
+
+class User(BaseModel):
+    user_id: str
+    username: str
+
+
+class UserStats(BaseModel):
+    currentStreak: int
+    maxStreak: int
+    guesses: dict
+    winPercentage: float
+    gamesPlayed: int
+    gamesWon: int
+    averageGuesses: float
+
+
+def getShardId(string_uuid):
+    curr_uuid = uuid.UUID(string_uuid)
+    return curr_uuid.int % settings.shards
 
 
 settings = Settings()
@@ -44,44 +65,46 @@ app = FastAPI(
     root_path="/api/statistics",
     openapi_url=settings.openapi_url,
 )
+
 r = redis.Redis(
     host="localhost", port=6379, db=0, charset="utf-8", decode_responses=True
 )
-
-
-def getShardId(string_uuid):
-    curr_uuid = uuid.UUID(string_uuid)
-    return curr_uuid.int % settings.shards
 
 
 @app.get("/users/")
 def list_users():
     for shard in range(settings.shards):
         db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-        users = db.execute("SELECT * FROM users")
+        users = db.execute("SELECT * FROM users LIMIT 100")
         yield {"stats_db": shard, "users": users.fetchall()}
 
 
-@app.get("/users/{user_id}")
-def get_user(user_id: str, response: Response):
-    shard = getShardId(user_id)
-    db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-    cur = db.execute("SELECT * FROM users WHERE user_id = ?", [user_id])
-    user = cur.fetchall()
+@app.get("/users/{username}", response_model=User)
+def get_user_id(username: str):
+    for shard in range(settings.shards):
+        db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
+        cur = db.execute(
+            "SELECT * FROM users WHERE username=:username LIMIT 1", [username]
+        )
+        user = cur.fetchone()
+        if user:
+            result = {"user_id": user[0], "username": user[1]}
+            break
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User does not exist",
         )
-    return {"user": user}
+    return result
 
 
-@app.get("/users/{user_id}/stats")
-def get_stats(user_id: str, response: Response):
+@app.get("/users/{username}/stats", response_model=UserStats)
+def get_stats(username: str):
+    user_id = get_user_id(username).get("user_id")
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
     max_streak = db.execute(
-        "SELECT streak FROM streaks WHERE user_id = ? ORDER BY streak DESC LIMIT 1",
+        "SELECT streak FROM streaks WHERE user_id=:user_id ORDER BY streak DESC LIMIT 1",
         [user_id],
     )
     # streaks for this user
@@ -89,7 +112,7 @@ def get_stats(user_id: str, response: Response):
     if not max_streak:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User does not exist",
+            detail="No game stats found for this user",
         )
     curr_streak = db.execute(
         "SELECT streak FROM streaks WHERE user_id = ? ORDER BY ending DESC LIMIT 1",
@@ -107,24 +130,23 @@ def get_stats(user_id: str, response: Response):
     losses = games_played[0] - wins[0]
     # count of guesses in each win, or count of fails
     guesses = db.execute(
-        "SELECT COUNT(guesses) FROM games WHERE user_id = ? AND won = TRUE GROUP BY guesses",
+        "SELECT guesses, COUNT(guesses) FROM games WHERE user_id = ? AND won = TRUE GROUP BY guesses",
         [user_id],
     )
     guesses_query = guesses.fetchall()
-    guesses = {
-        "1": guesses_query[0][0],
-        "2": guesses_query[1][0],
-        "3": guesses_query[2][0],
-        "4": guesses_query[3][0],
-        "5": guesses_query[4][0],
-        "6": guesses_query[5][0],
-        "failed": losses,
-    }
+    guesses = {}
+    for i in range(len(guesses_query)):
+        num_guesses = guesses_query[i][1]
+        key = guesses_query[i][0]
+        entry = {key: num_guesses}
+        guesses.update(entry)
+    guesses.update({"failed": losses})
     # average guesses for wins
     sum = 0
-    for i in range(6):
-        key = i + 1
-        sum += key * guesses[f"{key}"]
+    guess_keys = list(guesses.keys())
+    guess_values = list(guesses.values())
+    for i in range(len(guess_keys) - 1):
+        sum += guess_keys[i] * guess_values[i]
     avg_guesses = sum / wins[0]
 
     avg_wins = wins[0] / games_played[0]
@@ -146,14 +168,7 @@ def create_game_stats(game: Game, response: Response):
     user = g.get("user_id")
     shard = getShardId(user)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-    db = sqlite3.connect(f"./var/stats{shard}.db")
-
     try:
-        games_played = db.execute(
-            "SELECT COUNT(*) FROM games WHERE user_id=:user_id LIMIT 1", g
-        )
-        games_played = games_played.fetchone()[0]
-        g["game_id"] = games_played + 1
         cur = db.execute(
             """
             INSERT INTO games(user_id, game_id, finished, guesses, won)
