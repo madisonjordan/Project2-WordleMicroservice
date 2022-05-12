@@ -64,7 +64,7 @@ def getShardId(string_uuid):
 def list_users():
     for shard in range(settings.shards):
         db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-        users = db.execute("SELECT * FROM users")
+        users = db.execute("SELECT * FROM users LIMIT 100")
         yield {"stats_db": shard, "users": users.fetchall()}
 
 
