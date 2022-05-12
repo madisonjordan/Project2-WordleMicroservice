@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     openapi_url: str = "/openapi.json"
 
     class Config:
-        env_file = "stats.env"
+        env_file = "./stats.env"
 
 
 class Game(BaseModel):
@@ -40,6 +40,21 @@ class User(BaseModel):
     username: str
 
 
+class UserStats(BaseModel):
+    currentStreak: int
+    maxStreak: int
+    guesses: dict
+    winPercentage: int
+    gamesPlayed: int
+    gamesWon: int
+    averageGuesses: float
+
+
+def getShardId(string_uuid):
+    curr_uuid = uuid.UUID(string_uuid)
+    return curr_uuid.int % settings.shards
+
+
 settings = Settings()
 app = FastAPI(
     servers=[
@@ -50,14 +65,10 @@ app = FastAPI(
     root_path="/api/statistics",
     openapi_url=settings.openapi_url,
 )
+
 r = redis.Redis(
     host="localhost", port=6379, db=0, charset="utf-8", decode_responses=True
 )
-
-
-def getShardId(string_uuid):
-    curr_uuid = uuid.UUID(string_uuid)
-    return curr_uuid.int % settings.shards
 
 
 @app.get("/users/")
@@ -72,7 +83,9 @@ def list_users():
 def get_user_id(username: str):
     for shard in range(settings.shards):
         db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
-        cur = db.execute("SELECT * FROM users WHERE username = ? LIMIT 1", [username])
+        cur = db.execute(
+            "SELECT * FROM users WHERE username=:username LIMIT 1", [username]
+        )
         user = cur.fetchone()
         if user:
             result = {"user_id": user[0], "username": user[1]}
@@ -85,18 +98,12 @@ def get_user_id(username: str):
     return result
 
 
-@app.get("/users/{username}/stats")
-def get_stats(username: str):
-    user_id = get_user_id(username).get("user_id")
-    if user_id == None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User does not exist",
-        )
+@app.get("/users/{user_id}/stats", response_model=UserStats)
+def get_stats(user_id: str):
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
     max_streak = db.execute(
-        "SELECT streak FROM streaks WHERE user_id = ? ORDER BY streak DESC LIMIT 1",
+        "SELECT streak FROM streaks WHERE user_id=:user_id ORDER BY streak DESC LIMIT 1",
         [user_id],
     )
     # streaks for this user
@@ -126,18 +133,17 @@ def get_stats(username: str):
         [user_id],
     )
     guesses_query = guesses.fetchall()
-    guesses = {
-        "1": guesses_query[0][0],
-        "2": guesses_query[1][0],
-        "3": guesses_query[2][0],
-        "4": guesses_query[3][0],
-        "5": guesses_query[4][0],
-        "6": guesses_query[5][0],
-        "failed": losses,
-    }
+    guesses = {}
+    for i in range(len(guesses_query)):
+        num_guesses = guesses_query[i][0]
+        guess = i + 1
+        key = f"{guess}"
+        entry = {key: num_guesses}
+        guesses.update(entry)
+    guesses.update({"failed": losses})
     # average guesses for wins
     sum = 0
-    for i in range(6):
+    for i in range(len(guesses_query)):
         key = i + 1
         sum += key * guesses[f"{key}"]
     avg_guesses = sum / wins[0]
