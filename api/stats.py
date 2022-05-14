@@ -18,9 +18,9 @@ sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
 
 
 class Settings(BaseSettings):
-    database_dir: str
-    logging_config: str
-    shards: int
+    database_dir: str = "./var/"
+    logging_config: str = "./etc/logging.ini"
+    shards: int = 3
     openapi_url: str = "/openapi.json"
 
     class Config:

@@ -12,9 +12,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 
-- Changed stats database shards to use original sqlite-populated.sql data
+- Changed settings in services to contain default values when not using .env files
 
-## [2.0.0] - 2022-04-30
+## [3.0.1] 2022-05-13
+
+### Added
+
+- Added response models and examples for autodocumentation
+
+### Fixed
+
+### Changed
+
+- Changed user stats search to search by username
+
+## [3.0.0] (Project 4) - 2022-05-11
+
+### Added
+
+- Added leaderboard redis cron job
+- Added game state service
+
+### Fixed
+
+### Changed
+
+- Changed stats database shards to use original sqlite-populated.sql data
+- Changed file structure and configuration
+
+## [2.0.0] (Project 3) - 2022-04-30
 
 ### Added
 
@@ -28,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 - Fixed unique username generation in statistics database
 
-## [1.0.0] - 2022-04-29
+## [1.0.0] (Project 2) - 2022-04-29
 
 ### Added
 
