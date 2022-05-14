@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [Unreleased]
+## [Unreleased] 2022-05-13
+
+### Added
+
+### Fixed
+
+### Changed
+
+- Changed settings in services to contain default values when not using .env files
+
+## [3.0.0] 2022-05-13
 
 ### Added
 
@@ -14,9 +24,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 
-- Changed stats database shards to use original sqlite-populated.sql data
-- Changed settings in services to contain default values when not using .env files
 - Changed user stats search to search by username
+
+## [3.0.0] - 2022-05-11
+
+### Added
+
+- Added leaderboard redis cron job
+- Added game state service
+
+### Fixed
+
+### Changed
+
+- Changed stats database shards to use original sqlite-populated.sql data
+- Changed file structure and configuration
 
 ## [2.0.0] - 2022-04-30
 
