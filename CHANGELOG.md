@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 - Changed settings in services to contain default values when not using .env files
 
-## [3.0.0] 2022-05-13
+## [3.0.1] 2022-05-13
 
 ### Added
 
@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 - Changed user stats search to search by username
 
-## [3.0.0] - 2022-05-11
+## [3.0.0] (Project 4) - 2022-05-11
 
 ### Added
 
@@ -40,7 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Changed stats database shards to use original sqlite-populated.sql data
 - Changed file structure and configuration
 
-## [2.0.0] - 2022-04-30
+## [2.0.0] (Project 3) - 2022-04-30
 
 ### Added
 
@@ -54,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 - Fixed unique username generation in statistics database
 
-## [1.0.0] - 2022-04-29
+## [1.0.0] (Project 2) - 2022-04-29
 
 ### Added
 
