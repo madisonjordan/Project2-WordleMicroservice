@@ -53,7 +53,7 @@ async def updateStats():
     async with httpx.AsyncClient(
         app=stats_service, base_url="http://120.0.0.1:9999"
     ) as client:
-        r = await client.post("/users/christina22")
+        r = await client.post("/users/b07ecefc-a928-4b3a-a418-cb8930dd93b4")
         print(r.status_code)
         print(json.dumps(json.loads(r.text), indent=4))
 
@@ -63,7 +63,7 @@ async def getStats():
     async with httpx.AsyncClient(
         app=stats_service, base_url="http://120.0.0.1:9999"
     ) as client:
-        r = await client.get("/users/christina22")
+        r = await client.get("/users/b07ecefc-a928-4b3a-a418-cb8930dd93b4/stats")
         print(r.status_code)
         print(json.dumps(json.loads(r.text), indent=4))
 
@@ -76,4 +76,5 @@ async def getStats():
 
 # test async
 asyncio.run(getUser())
+asyncio.run(getStats())
 asyncio.run(check_guess())
