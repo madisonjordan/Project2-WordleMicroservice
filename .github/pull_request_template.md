@@ -19,6 +19,7 @@
   - [ ] separate python files for each service
   - [ ] Answer Service doesn't store current day's answer on the server side
   - [ ] Answer Service doesn't track number of guesses made by a client
+- [ ] BFF service doesn't access database (SQL or Redis)
 
 #### Readability / Maintainability
 
