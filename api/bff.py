@@ -48,6 +48,16 @@ async def check_guess():
         print(json.dumps(json.loads(r.text), indent=4))
 
 
+# TODO: post user's guess to game
+async def update_game():
+    async with httpx.AsyncClient(
+        app=game_state_service, base_url="http://120.0.0.1:9999"
+    ) as client:
+        r = await client.post("/game/")
+        print(r.status_code)
+        print(json.dumps(json.loads(r.text), indent=4))
+
+
 # TODO: update user stats if this game is finished
 async def updateStats():
     async with httpx.AsyncClient(
@@ -68,13 +78,37 @@ async def getStats():
         print(json.dumps(json.loads(r.text), indent=4))
 
 
+# TEST async
+asyncio.run(getUser())
+asyncio.run(getStats())
+asyncio.run(check_guess())
+
+
+###########
+# Example #
+###########
 # define tasks to run concurrently
 # async def main():
 
 # run concurrently
 # asyncio.run(main())
 
-# test async
-asyncio.run(getUser())
-asyncio.run(getStats())
-asyncio.run(check_guess())
+
+# TODO: workflow for adding a new guess
+# input: username or user_id (pick one)
+# output:
+# error conditions:
+#   - game doesn't exist
+#   - game has ended
+#   - word isn't valid
+
+# async def new_guess():
+
+
+# TODO: workflow for adding a new game
+# input: username
+# output: game state of this game
+# error conditions:
+#   - game id already exists (conflict)
+
+# async def new_game():
