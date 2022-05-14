@@ -7,7 +7,7 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    logging_config: str = ""
+    logging_config: str = "./etc/logging.ini"
     openapi_url: str = "/openapi.json"
 
     class Config:

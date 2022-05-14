@@ -5,13 +5,17 @@ import json
 from answers import app as answers
 
 
-async def main():
+async def check_guess():
     async with httpx.AsyncClient(
         app=answers, base_url="http://120.0.0.1:9999"
     ) as client:
-        r = await client.get("/check/forge")
+        r = await client.get("/check/soaps")
         print(r.status_code)
         print(json.dumps(json.loads(r.text), indent=4))
 
 
-asyncio.run(main())
+# async def main():
+
+
+# asyncio.run(main())
+asyncio.run(check_guess())

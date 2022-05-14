@@ -8,11 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Added
 
+- Added response models and examples for autodocumentation
+
 ### Fixed
 
 ### Changed
 
 - Changed stats database shards to use original sqlite-populated.sql data
+- Changed settings in services to contain default values when not using .env files
+- Changed user stats search to search by username
 
 ## [2.0.0] - 2022-04-30
 

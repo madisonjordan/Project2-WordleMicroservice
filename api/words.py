@@ -7,8 +7,8 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    database: str
-    logging_config: str
+    database: str = "./var/words.db"
+    logging_config: str = "./etc/logging.ini"
     openapi_url: str = "/openapi.json"
 
     class Config:
