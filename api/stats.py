@@ -8,6 +8,7 @@ import collections
 import itertools
 import redis
 import json
+from typing import Optional
 
 from fastapi import FastAPI, Depends, Response, HTTPException, status, Request
 from pydantic import BaseModel, BaseSettings
@@ -36,8 +37,8 @@ class Game(BaseModel):
 
 
 class User(BaseModel):
-    user_id: str
     username: str
+    user_id: Optional[str]
 
 
 class UserStats(BaseModel):
@@ -88,7 +89,7 @@ def get_user_id(username: str):
         )
         user = cur.fetchone()
         if user:
-            result = {"user_id": user[0], "username": user[1]}
+            result = {"username": user[1], "user_id": user[0]}
             break
     if not user:
         raise HTTPException(
