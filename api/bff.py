@@ -31,24 +31,21 @@ class Guess(BaseModel):
 
 # get user_id from stats service
 def getUser(username: str):
-    # with httpx.Client(app=stats_service, base_url="http://127.0.0.1:9999") as client:
-    response = httpx.get(f"http://localhost:9999/api/statistics/users/{username}")
-    # user_data = json.loads(r.text)
-    print(response.url)
-    # print(r.status_code)
-    # print(json.dumps(user_data, indent=4))
-    # get user_id
-    return response.json()
+    with httpx.Client(base_url="http://localhost:9999/api/statistics") as client:
+        response = client.get(f"/users/{username}")
+        # user_data = json.loads(r.text)
+        print(response.url)
+        # print(r.status_code)
+        # print(json.dumps(user_data, indent=4))
+        # get user_id
+        return response.json()
 
 
-# TODO: create new game
+# create new game
 def create_game(game: Game):
     headers = {"content-type": "application/json"}
-    request = httpx.Request(
-        "POST", "http://localhost:9999/api/state/game/new", data=game, headers=headers
-    )
-    with httpx.Client() as client:
-        response = client.send(request)
+    with httpx.Client(base_url="http://localhost:9999/api/state") as client:
+        response = client.post("/game/new", data=game, headers=headers)
         # print(game.get("user_id"))
         # print(game.get("game_id"))
         # print("===================\n")
@@ -150,7 +147,7 @@ def new_game(username: User):
     # print for debugging
     print("getUser():\n\t", user, "\n")
     user = user.get("user_id")
-    # print(user)
+    # create new game object using user and default game_id
     game = Game(user_id=user).json()
     # print for debugging
     print("Game model object:\n\t", game, "\n")
