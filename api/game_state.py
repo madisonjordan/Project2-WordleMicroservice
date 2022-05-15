@@ -30,6 +30,11 @@ class Game(BaseModel):
     game_id: int = int(datetime.date.today().strftime("%Y%m%d"))
 
 
+class Guess(BaseModel):
+    user_id: str
+    guess: str
+
+
 class State(BaseModel):
     status: Optional[str] = "new"
     user_id: str
@@ -44,7 +49,7 @@ class Message(BaseModel):
 
 # get game status
 @app.get(
-    "/game/{user_id}/{game_id}",
+    "/users/{user_id}/game/{game_id}",
     response_model=State,
     responses={
         404: {"model": Message, "description": "The game was not found"},
@@ -125,8 +130,9 @@ def new_game(game: Game):
     return new_game
 
 
+# update game
 @app.post(
-    "/game/update",
+    "/game/{game_id}",
     response_model=State,
     responses={
         404: {"model": Message, "description": "The game was not found"},
@@ -146,8 +152,11 @@ def new_game(game: Game):
         },
     },
 )
-def add_guess(guess: str, game: Game):
-    res = r.hmget(game.user_id, game.game_id)
+def add_guess(game_id: int, guess: Guess):
+    data = json.loads(guess.json())
+    user_id = data.get("user_id")
+    guess = data.get("guess")
+    res = r.hmget(user_id, game_id)
     # if game is already played return error
     if res[0] == None:
         raise HTTPException(status_code=400, detail="Failed to add guess")
@@ -166,7 +175,7 @@ def add_guess(guess: str, game: Game):
     # save changes
     mapping = json.dumps(game_state)
     r.hmset(
-        game.user_id,
-        {game.game_id: mapping},
+        user_id,
+        {game_id: mapping},
     )
     return game_state
