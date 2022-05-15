@@ -2,7 +2,6 @@ import asyncio
 import httpx
 import json
 from pydantic import BaseModel
-import pydantic.json as pydanticjson
 from typing import Optional
 import datetime
 
