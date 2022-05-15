@@ -8,10 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Added
 
+- Added Guess model to game_state
+
 ### Fixed
 
 ### Changed
 
+- Changed GET game in game_state to use path (no body used in requests)
+- Changed stats to search by user_id for passing from BFF service
+- Change UPDATE game in game_state to use game_id in path
 - Changed settings in services to contain default values when not using .env files
 
 ## [3.0.1] 2022-05-13
