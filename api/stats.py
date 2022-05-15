@@ -1,11 +1,7 @@
 import sqlite3
 import uuid
-import sqlite_utils
 import datetime
-import contextlib
 import logging.config
-import collections
-import itertools
 import redis
 import json
 from typing import Optional
