@@ -1,4 +1,8 @@
-from fastapi import FastAPI, Depends, Response, HTTPException, status, Body
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    status,
+)
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, BaseSettings
 import redis
@@ -40,7 +44,7 @@ class Message(BaseModel):
 
 # get game status
 @app.get(
-    "/game/",
+    "/game/{user_id}/{game_id}",
     response_model=State,
     responses={
         404: {"model": Message, "description": "The game was not found"},

@@ -4,6 +4,7 @@ import json
 from pydantic import BaseModel
 from typing import Optional
 import datetime
+from fastapi.encoders import jsonable_encoder
 
 
 from answers import app as answer_service
@@ -31,7 +32,7 @@ class Guess(BaseModel):
 # get user_id from stats service
 def getUser(username: str):
     # with httpx.Client(app=stats_service, base_url="http://127.0.0.1:9999") as client:
-    response = httpx.get(f"http://127.0.0.1:9999/users/{username}")
+    response = httpx.get(f"http://localhost:9999/api/statistics/users/{username}")
     # user_data = json.loads(r.text)
     print(response.url)
     # print(r.status_code)
@@ -43,20 +44,25 @@ def getUser(username: str):
 # TODO: create new game
 def create_game(game: Game):
     headers = {"content-type": "application/json"}
-    # with httpx.Client(app=game_state_service, headers=headers) as client:
-    # print(headers["content-type"])
-    response = httpx.post("http://127.0.0.1:9999/game/new", data=game, headers=headers)
-    # print(game.get("user_id"))
-    # print(game.get("game_id"))
-    # print(response.request.url)
-    print(response.url)
-    print(response.text)
+    request = httpx.Request(
+        "POST", "http://localhost:9999/api/state/game/new", data=game, headers=headers
+    )
+    with httpx.Client() as client:
+        response = client.send(request)
+        # print(game.get("user_id"))
+        # print(game.get("game_id"))
+        # print("===================\n")
+        # print("request:\n", response.request.url)
+        # print(headers)
+        # print(game)
+        # print("\nresponse:\n", response.url)
+        print(response.text)
 
 
 # TODO: check if user has guesses remaining in this game
 async def isValidGame():
     async with httpx.AsyncClient(
-        app=game_state_service, base_url="http://127.0.0.1:9999"
+        app=game_state_service, base_url="http://localhost:9999/api/state"
     ) as client:
         r = await client.get("/game/")
         print(r.status_code)
@@ -66,7 +72,7 @@ async def isValidGame():
 # TODO: check if word is valid guess
 async def isValidWord(guess: str):
     async with httpx.AsyncClient(
-        app=word_service, base_url="http://127.0.0.1:9999"
+        app=word_service, base_url="http://localhost:9999/api/word"
     ) as client:
         r = await client.get("/word/", guess)
         print(r.status_code)
@@ -76,7 +82,7 @@ async def isValidWord(guess: str):
 # TODO: check if valid guess is correct answer
 async def check_guess():
     async with httpx.AsyncClient(
-        app=answer_service, base_url="http://127.0.0.1:9999"
+        app=answer_service, base_url="http://localhost:9999/api/answer"
     ) as client:
         r = await client.get("/check/soaps")
         print(r.status_code)
@@ -86,7 +92,7 @@ async def check_guess():
 # TODO: post user's guess to game
 async def update_game():
     async with httpx.AsyncClient(
-        app=game_state_service, base_url="http://127.0.0.1:9999"
+        app=game_state_service, base_url="http://localhost:9999/api/state"
     ) as client:
         r = await client.post("/game/")
         print(r.status_code)
@@ -96,7 +102,7 @@ async def update_game():
 # TODO: update user stats if this game is finished
 async def updateStats():
     async with httpx.AsyncClient(
-        app=stats_service, base_url="http://127.0.0.1:9999"
+        app=stats_service, base_url="http://localhost:9999/api/statistics"
     ) as client:
         r = await client.post("/users/b07ecefc-a928-4b3a-a418-cb8930dd93b4")
         print(r.status_code)
@@ -106,7 +112,7 @@ async def updateStats():
 # TODO: return user stats
 async def getStats():
     async with httpx.AsyncClient(
-        app=stats_service, base_url="http://127.0.0.1:9999"
+        app=stats_service, base_url="http://localhost:9999/api/statistics"
     ) as client:
         r = await client.get("/users/b07ecefc-a928-4b3a-a418-cb8930dd93b4/stats")
         print(r.status_code)
@@ -148,12 +154,8 @@ def new_game(username: User):
     game = Game(user_id=user).json()
     # print for debugging
     print("Game model object:\n\t", game, "\n")
-    # TODO: create_game passing game object
-    create_game(json.dumps(game))
+    # pass new game object and create new game
     create_game(game)
-    game = Game(user_id=user).__dict__
-    create_game(game)
-    create_game(json.dumps(game))
 
 
 # test new game() for endpoint
