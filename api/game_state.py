@@ -4,6 +4,7 @@ from pydantic import BaseModel, BaseSettings
 import redis
 import json
 from typing import Optional
+import datetime
 
 
 class Settings(BaseSettings):
@@ -22,7 +23,7 @@ r = redis.Redis(host="localhost", port=6379, db=0)
 # defines a new game in request body
 class Game(BaseModel):
     user_id: str
-    game_id: int
+    game_id: int = int(datetime.date.today().strftime("%Y%m%d"))
 
 
 class State(BaseModel):
@@ -74,7 +75,7 @@ def get_game(user_id: str, game_id: int):
 
 # start a new game
 @app.post(
-    "/game/",
+    "/game/new",
     response_model=State,
     responses={
         403: {
