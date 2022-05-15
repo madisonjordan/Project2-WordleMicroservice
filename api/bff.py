@@ -1,4 +1,5 @@
 import asyncio
+from urllib import response
 import httpx
 import json
 from pydantic import BaseModel
@@ -55,6 +56,7 @@ def create_game(game: Game):
         print(response.text)
 
 
+# get current game state
 def getGame(game: Game):
     game_id = game.get("game_id")
     user_id = game.get("user_id")
@@ -66,7 +68,7 @@ def getGame(game: Game):
         print(json.dumps(text, indent=4))
 
 
-# TODO: check if user has guesses remaining in this game
+# check if user has guesses remaining in this game
 def isValidGame(game: Game):
     game_id = game.get("game_id")
     user_id = game.get("user_id")
@@ -81,24 +83,24 @@ def isValidGame(game: Game):
             return True
 
 
-# TODO: check if word is valid guess
-async def isValidWord(guess: str):
-    async with httpx.AsyncClient(
-        app=word_service, base_url="http://localhost:9999/api/word"
-    ) as client:
-        r = await client.get("/word/", guess)
-        print(r.status_code)
-        print(json.dumps(json.loads(r.text), indent=4))
+# check if word is valid guess
+def isValidWord(guess: str):
+    headers = {"content-type": "application/json"}
+    with httpx.Client(base_url="http://localhost:9999/api/word") as client:
+        response = client.get(f"/words/{guess}", headers=headers)
+        if response.status_code == 200:
+            return True
+        else:
+            return False
 
 
 # TODO: check if valid guess is correct answer
-async def check_guess():
-    async with httpx.AsyncClient(
-        app=answer_service, base_url="http://localhost:9999/api/answer"
-    ) as client:
-        r = await client.get("/check/soaps")
-        print(r.status_code)
-        print(json.dumps(json.loads(r.text), indent=4))
+def check_guess(guess: str):
+    headers = {"content-type": "application/json"}
+    with httpx.Client(base_url="http://localhost:9999/api/answer") as client:
+        response = client.get(f"/check/{guess}", headers=headers)
+        print(response.status_code)
+        print(json.dumps(json.loads(response.text), indent=4))
 
 
 # post user's guess to game
@@ -158,11 +160,19 @@ def new_guess(game_id: int, guess=Guess):
         print("False")
 
     # check if word is valid
-    # isValidWord()
+    print("\nisValidWord():")
+    if isValidWord(current_guess):
+        print("True")
+    else:
+        print("False")
 
     # add new guess to game
     print("\nadd_guess():")
     add_guess(json.loads(game), current_guess)
+
+    # check if guess is correct
+    print("\ncheck_guess():")
+    check_guess(current_guess)
 
 
 # TODO: workflow for adding a new game
@@ -172,7 +182,7 @@ def new_guess(game_id: int, guess=Guess):
 #   - game id already exists (conflict)
 def new_game(username: User):
     # game_id test value - when not using default (today)
-    test_gameid = 20220517
+    test_gameid = 20220518
     # get user_id
     user = getUser(username)
     # print values for getUser response
@@ -188,7 +198,7 @@ def new_game(username: User):
     create_game(game)
     print("\ngetGame():")
     getGame(json.loads(game))
-    guess = Guess(user_id=user, guess="helps").json()
+    guess = Guess(user_id=user, guess="forge").json()
     new_guess(test_gameid, json.loads(guess))
 
 
