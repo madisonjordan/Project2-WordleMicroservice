@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, BaseSettings
 import redis
 import json
-from typing import Optional
+from typing import Optional, Literal
 import datetime
 
 
@@ -36,7 +36,7 @@ class Guess(BaseModel):
 
 
 class State(BaseModel):
-    status: Optional[str] = "new"
+    status: Literal["new", "in-progress", "finished"]
     user_id: str
     game_id: int
     remaining: Optional[int] = 6
