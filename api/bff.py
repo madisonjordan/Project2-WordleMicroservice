@@ -13,7 +13,7 @@ from words import app as word_service
 from stats import app as stats_service
 from game_state import app as game_state_service
 
-
+# input/output models for bff service endpoints
 class User(BaseModel):
     username: str
     user_id: Optional[str]
@@ -94,11 +94,11 @@ def isValidWord(guess: str):
             return False
 
 
-# TODO: check if valid guess is correct answer
-def check_guess(guess: str):
+# check if guess is correct
+def check_guess(guess: str, day: int):
     headers = {"content-type": "application/json"}
     with httpx.Client(base_url="http://localhost:9999/api/answer") as client:
-        response = client.get(f"/check/{guess}", headers=headers)
+        response = client.get(f"/check/{guess}", params={"day": day}, headers=headers)
         print(response.status_code)
         print(json.dumps(json.loads(response.text), indent=4))
         # check if the guess is correct from the response
@@ -151,7 +151,7 @@ async def getStats():
 #   - game doesn't exist
 #   - game has ended
 #   - word isn't valid
-def new_guess(game_id: int, guess=Guess):
+def new_guess(game_id: int, guess: Guess):
     # get user from guess request body
     user = guess.get("user_id")
     # create game object
@@ -180,7 +180,7 @@ def new_guess(game_id: int, guess=Guess):
 
     # check if guess is correct
     print("\ncheck_guess():")
-    if check_guess(current_guess):
+    if check_guess(current_guess, game_id):
         print("True")
     else:
         print("False")
@@ -193,7 +193,7 @@ def new_guess(game_id: int, guess=Guess):
 #   - game id already exists (conflict)
 def new_game(username: User):
     # game_id test value - when not using default (today)
-    test_gameid = 20220602
+    test_gameid = 20220501
     # get user_id
     user = getUser(username)
     # print values for getUser response
@@ -209,7 +209,7 @@ def new_game(username: User):
     create_game(game)
     print("\ngetGame():")
     getGame(json.loads(game))
-    guess = Guess(user_id=user, guess="forge").json()
+    guess = Guess(user_id=user, guess="pilot").json()
     new_guess(test_gameid, json.loads(guess))
 
 

@@ -1,7 +1,7 @@
 import contextlib
 import logging.config
 import sqlite3
-import typing
+from typing import Optional
 import json
 import datetime
 from datetime import date
@@ -53,7 +53,10 @@ def get_logger():
 
 # get WOTD based on the date parameter entered
 @app.get("/answers/{day}")
-def get_answer(day: int, response: Response, db: sqlite3.Connection = Depends(get_db)):
+def get_answer(
+    day: int = int(datetime.date.today().strftime("%Y%m%d")),
+    db: sqlite3.Connection = Depends(get_db),
+):
     cur = db.execute("SELECT word FROM answers WHERE day = ?", [day])
     wotd = cur.fetchall()
     if not wotd:
@@ -95,7 +98,7 @@ def change_answer(
 @app.get("/check/{guess}", response_model=Check)
 def find_answer(
     guess: str,
-    day: int = int(datetime.date.today().strftime("%Y%m%d")),
+    day: Optional[int] = int(datetime.date.today().strftime("%Y%m%d")),
     db: sqlite3.Connection = Depends(get_db),
     logger: logging.Logger = Depends(get_logger),
 ):
