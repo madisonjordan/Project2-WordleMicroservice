@@ -1,12 +1,11 @@
 import asyncio
-from pickle import FALSE
 from urllib import response
 import httpx
 import json
 from pydantic import BaseModel
 from typing import Optional, Literal
 import datetime
-from fastapi.encoders import jsonable_encoder
+from fastapi import FastAPI, Depends, Response, HTTPException, Body
 
 
 from answers import app as answer_service
@@ -37,11 +36,7 @@ class Game(BaseModel):
 def getUser(username: str):
     with httpx.Client(base_url="http://localhost:9999/api/statistics") as client:
         response = client.get(f"/users/{username}")
-        # user_data = json.loads(r.text)
         print(response.url)
-        # print(r.status_code)
-        # print(json.dumps(user_data, indent=4))
-        # get user_id
         return response.json()
 
 
@@ -50,14 +45,7 @@ def create_game(game: Game):
     headers = {"content-type": "application/json"}
     with httpx.Client(base_url="http://localhost:9999/api/state") as client:
         response = client.post("/game/new", data=game, headers=headers)
-        # print(game.get("user_id"))
-        # print(game.get("game_id"))
-        # print("===================\n")
-        # print("request:\n", response.request.url)
-        # print(headers)
-        # print(game)
-        # print("\nresponse:\n", response.url)
-        print(response.text)
+        return response
 
 
 # get current game state
@@ -67,9 +55,6 @@ def getGame(game: Game):
     headers = {"content-type": "application/json"}
     with httpx.Client(base_url="http://localhost:9999/api/state") as client:
         response = client.get(f"users/{user_id}/game/{game_id}", headers=headers)
-        print(response.status_code)
-        text = json.loads(response.text)
-        print(json.dumps(text, indent=4))
         return response
 
 
@@ -104,8 +89,6 @@ def check_guess(guess: str, day: int):
     headers = {"content-type": "application/json"}
     with httpx.Client(base_url="http://localhost:9999/api/answer") as client:
         response = client.get(f"/check/{guess}", params={"day": day}, headers=headers)
-        # print(response.status_code)
-        # print(json.dumps(json.loads(response.text), indent=4))
         return response
 
 
@@ -118,9 +101,21 @@ def add_guess(game: Game, guess: str):
     current_guess = Guess(user_id=user, guess=guess).json()
     headers = {"content-type": "application/json"}
     with httpx.Client(base_url="http://localhost:9999/api/state") as client:
-        response = client.post(f"/game/{game_id}", data=current_guess, headers=headers)
-        print(response.status_code)
-        print(json.dumps(json.loads(response.text), indent=4))
+        response = client.post(
+            f"/game/{game_id}/new", data=current_guess, headers=headers
+        )
+        return response
+
+
+# mark won game as finished
+def markGameComplete(game: Game):
+    # load game data
+    user_id = game.get("user_id")
+    game_id = game.get("game_id")
+    headers = {"content-type": "application/json"}
+    with httpx.Client(base_url="http://localhost:9999/api/state") as client:
+        response = client.put(f"/users/{user_id}/game/{game_id}", headers=headers)
+        return response
 
 
 # update user stats if this game is finished
@@ -128,8 +123,6 @@ def updateStats(game: Game):
     headers = {"content-type": "application/json"}
     with httpx.Client(base_url="http://localhost:9999/api/statistics") as client:
         response = client.post(f"/users/", json=game, headers=headers)
-        print(response.status_code)
-        print(json.dumps(json.loads(response.text), indent=4))
         return response
 
 
@@ -141,8 +134,8 @@ def getStats(user_id: str):
         return response
 
 
-# TODO: workflow for adding a new guess
-# input: username or user_id (pick one)
+# NEW GUESS Workflow
+# input: user_id (pick one)
 # output:
 # error conditions:
 #   - game doesn't exist
@@ -156,64 +149,73 @@ def new_guess(game_id: int, guess: Guess):
     # get guess string from guess request body
     current_guess = guess.get("guess")
     isCorrect = False
+    isWordValid = False
+    isGameValid = False
 
     # check if game is valid
     print("\nisValidGame():")
     if isValidGame(json.loads(game.json())):
-        print("True")
-    else:
-        # raise 400 error - bad request and get remaining guesses from game state
-        print("False")
+        isGameValid = True
 
     # check if word is valid
     print("\nisValidWord():")
     if isValidWord(current_guess):
-        print("True")
+        isWordValid = True
     else:
-        print("False")
+        # raise 400 error - bad request and get remaining guesses from game state
+        game_state = getGame(json.loads(game.json()))
+        game_text = json.loads(game_state.text)
+        guess_remaining = game_text.get("remaining")
+        invalid_body = {"status": "invalid", "remaining": guess_remaining}
+        invalid_response = Response(
+            status_code=400,
+            content=json.dumps(invalid_body),
+            media_type="application/json",
+        )
+        print(invalid_response.status_code)
+        print(json.dumps(invalid_body))
+        return invalid_response
 
     # add new guess to game
-    print("\nadd_guess():")
-    add_guess(json.loads(game.json()), current_guess)
+    if (isWordValid) and (isGameValid):
+        print("\nadd_guess():")
+        add_guess(json.loads(game.json()), current_guess)
 
-    # check if the guess is correct from the response
-    print("\ncheck_guess():")
-    check = check_guess(current_guess, game_id)
-    check_text = json.loads(check.text)
-    check_status = check_text.get("status")
-    if check_status == "correct":
-        isCorrect = True
-        print("Correct")
-    else:
-        print(json.dumps(check_text, indent=4))
+        # check if the guess is correct from the response
+        print("\ncheck_guess():")
+        check = check_guess(current_guess, game_id)
+        check_text = json.loads(check.text)
+        check_status = check_text.get("status")
+        if check_status == "correct":
+            isCorrect = True
+            markGameComplete(json.loads(game.json()))
+        else:
+            return check
 
-    # get game state
-    game_stats = getGame(json.loads(game.json()))
-    game_text = json.loads(game_stats.text)
-    game_status = game_text.get("status")
-
-    # check if game is finished
-    # if won or lost, get/set number of guesses and update stats. (won already set)
-    if (game_status == "finished") or isCorrect:
-        num_guesses = len(game_text.get("guesses"))
-        updated_game = Game(
-            user_id=user, game_id=game_id, won=isCorrect, guesses=num_guesses
-        )
-        updateStats(json.loads(updated_game.json()))
-        # get updated stats
-        user_stats = getStats(user)
-        stats_text = json.loads(user_stats.text)
-        print(json.dumps(stats_text, indent=4))
+        # get game state
+        game_state = getGame(json.loads(game.json()))
+        game_text = json.loads(game_state.text)
+        game_status = game_text.get("status")
+        # check if game is finished
+        # if won or lost, get/set number of guesses and update stats.
+        if game_status == "finished":
+            num_guesses = len(game_text.get("guesses"))
+            updated_game = Game(
+                user_id=user, game_id=game_id, won=isCorrect, guesses=num_guesses
+            )
+            updateStats(json.loads(updated_game.json()))
+            # get updated stats
+            getStats(user)
 
 
-# TODO: workflow for adding a new game
+# NEW GAME workflow
 # input: username
 # output: game state of this game
 # error conditions:
 #   - game id already exists (conflict)
 def new_game(username: User):
     # game_id test value - when not using default (today)
-    test_gameid = 20220106
+    test_gameid = 20220215
     # get user_id
     user = getUser(username)
     # print values for getUser response
@@ -226,10 +228,14 @@ def new_game(username: User):
     print("Game model object:\n\t", game, "\n")
     print("\ncreate_game():")
     # pass new game object and create new game
+    # store/print response in "new_game" for debugging
     create_game(game)
+    # TEST NEW_GUESS
+    # get the specified game object
     print("\ngetGame():")
     getGame(json.loads(game))
-    guess = Guess(user_id=user, guess="blush").json()
+    # pass a new Guess object to the new_guess function
+    guess = Guess(user_id=user, guess="dfasf").json()
     new_guess(test_gameid, json.loads(guess))
 
 
