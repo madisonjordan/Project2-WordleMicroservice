@@ -1,14 +1,13 @@
 import contextlib
 import logging.config
 import sqlite3
-import typing
+from typing import Optional
 import json
 import datetime
 from datetime import date
 from sqlite_utils import Database
 
-
-from fastapi import FastAPI, Depends, Response, HTTPException, status, Body
+from fastapi import FastAPI, Depends, Response, HTTPException, Body
 from pydantic import BaseModel, BaseSettings
 from typing import Optional, List, Literal
 
@@ -33,7 +32,7 @@ class Letters(BaseModel):
 
 
 class Check(BaseModel):
-    status: Literal["incorrect", "correct", "invalid"]
+    isCorrect: Literal["incorrect", "correct"]
     letters: Letters
 
 
@@ -53,14 +52,14 @@ def get_logger():
 
 # get WOTD based on the date parameter entered
 @app.get("/answers/{day}")
-def get_answer(day: int, response: Response, db: sqlite3.Connection = Depends(get_db)):
+def get_answer(
+    day: int = int(datetime.date.today().strftime("%Y%m%d")),
+    db: sqlite3.Connection = Depends(get_db),
+):
     cur = db.execute("SELECT word FROM answers WHERE day = ?", [day])
     wotd = cur.fetchall()
     if not wotd:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No Answer for this Day",
-        )
+        raise HTTPException(status_code=404, detail="No Answer for this Day")
     return wotd
 
 
@@ -74,7 +73,6 @@ def get_all_answers(response: Response, db: sqlite3.Connection = Depends(get_db)
 @app.put("/answers")
 def change_answer(
     answer: Answer,
-    response: Response,
     db: sqlite3.Connection = Depends(get_db),
 ):
     word = dict(answer)
@@ -85,7 +83,7 @@ def change_answer(
     wotd = cur.fetchall()
     if not wotd:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="No Answer for this Day",
         )
     return wotd
@@ -95,7 +93,7 @@ def change_answer(
 @app.get("/check/{guess}", response_model=Check)
 def find_answer(
     guess: str,
-    day: int = int(datetime.date.today().strftime("%Y%m%d")),
+    day: Optional[int] = int(datetime.date.today().strftime("%Y%m%d")),
     db: sqlite3.Connection = Depends(get_db),
     logger: logging.Logger = Depends(get_logger),
 ):
@@ -104,7 +102,8 @@ def find_answer(
     answer = cur.fetchone()
     if not answer:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No Answer for this Day"
+            status_code=404,
+            detail="No Answer for this Day",
         )
     answer = answer[0]
     correct = []
