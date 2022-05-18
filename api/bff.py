@@ -3,7 +3,7 @@ from urllib import response
 import httpx
 import json
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 import datetime
 from fastapi.encoders import jsonable_encoder
 
@@ -101,6 +101,13 @@ def check_guess(guess: str):
         response = client.get(f"/check/{guess}", headers=headers)
         print(response.status_code)
         print(json.dumps(json.loads(response.text), indent=4))
+        # check if the guess is correct from the response
+        text = json.loads(response.text)
+        status = text.get("status")
+        if status == "correct":
+            return True
+        else:
+            return False
 
 
 # post user's guess to game
@@ -157,6 +164,7 @@ def new_guess(game_id: int, guess=Guess):
     if isValidGame(json.loads(game)):
         print("True")
     else:
+        # raise 400 error - bad request and get remaining guesses from game state
         print("False")
 
     # check if word is valid
@@ -172,7 +180,10 @@ def new_guess(game_id: int, guess=Guess):
 
     # check if guess is correct
     print("\ncheck_guess():")
-    check_guess(current_guess)
+    if check_guess(current_guess):
+        print("True")
+    else:
+        print("False")
 
 
 # TODO: workflow for adding a new game
@@ -182,7 +193,7 @@ def new_guess(game_id: int, guess=Guess):
 #   - game id already exists (conflict)
 def new_game(username: User):
     # game_id test value - when not using default (today)
-    test_gameid = 20220518
+    test_gameid = 20220602
     # get user_id
     user = getUser(username)
     # print values for getUser response
