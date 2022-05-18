@@ -99,15 +99,9 @@ def check_guess(guess: str, day: int):
     headers = {"content-type": "application/json"}
     with httpx.Client(base_url="http://localhost:9999/api/answer") as client:
         response = client.get(f"/check/{guess}", params={"day": day}, headers=headers)
-        print(response.status_code)
-        print(json.dumps(json.loads(response.text), indent=4))
-        # check if the guess is correct from the response
-        text = json.loads(response.text)
-        status = text.get("status")
-        if status == "correct":
-            return True
-        else:
-            return False
+        # print(response.status_code)
+        # print(json.dumps(json.loads(response.text), indent=4))
+        return response
 
 
 # post user's guess to game
@@ -178,12 +172,15 @@ def new_guess(game_id: int, guess: Guess):
     print("\nadd_guess():")
     add_guess(json.loads(game), current_guess)
 
-    # check if guess is correct
+    # check if the guess is correct from the response
     print("\ncheck_guess():")
-    if check_guess(current_guess, game_id):
-        print("True")
+    check = check_guess(current_guess, game_id)
+    check_text = json.loads(check.text)
+    check_status = check_text.get("status")
+    if check_status == "correct":
+        print("Correct")
     else:
-        print("False")
+        print(json.dumps(check_text, indent=4))
 
 
 # TODO: workflow for adding a new game
@@ -209,7 +206,7 @@ def new_game(username: User):
     create_game(game)
     print("\ngetGame():")
     getGame(json.loads(game))
-    guess = Guess(user_id=user, guess="pilot").json()
+    guess = Guess(user_id=user, guess="power").json()
     new_guess(test_gameid, json.loads(guess))
 
 
