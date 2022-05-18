@@ -27,7 +27,7 @@ class Settings(BaseSettings):
 class Game(BaseModel):
     user_id: str
     game_id: int = int(datetime.date.today().strftime("%Y%m%d"))
-    finished: datetime.date
+    finished: Optional[datetime.date] = datetime.date.today()
     guesses: int
     won: bool
 
