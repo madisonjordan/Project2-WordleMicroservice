@@ -81,6 +81,7 @@ def get_game(user_id: str, game_id: int):
 # start a new game
 @app.post(
     "/game/new",
+    status_code=status.HTTP_201_CREATED,
     response_model=GameState,
     response_model_exclude=["remaining", "guesses"],
     responses={
