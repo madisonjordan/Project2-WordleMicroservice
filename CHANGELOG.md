@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Added
 
+- Added BFF service
 - Added Guess model to game_state
 
 ### Fixed
@@ -15,15 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ### Changed
 
 - Changed GET game in game_state to use path (no body used in requests)
-- Changed stats to search by user_id for passing from BFF service
 - Change UPDATE game in game_state to use game_id in path
-- Changed settings in services to contain default values when not using .env files
 - Changed response model in game state to use GameState model instead of Game input model and State output model
+- Changed stats to search by user_id for passing from BFF service
 - Changed answers.db to use int as date instead of string
+- Changed settings in services to contain default values when not using .env files
 
 ### Removed
 
 - Removed Game model from game state service
+- Removed redundant traefik prefix path routing
 
 ## [3.0.1] 2022-05-13
 
