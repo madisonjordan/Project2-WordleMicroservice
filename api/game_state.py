@@ -1,13 +1,18 @@
-from fastapi import FastAPI, Depends, Response, HTTPException, status, Body
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    status,
+)
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, BaseSettings
 import redis
 import json
-from typing import Optional
+from typing import Optional, Literal
+import datetime
 
 
 class Settings(BaseSettings):
-    logging_config: str = ""
+    logging_config: str = "./etc/logging.ini"
     openapi_url: str = "/openapi.json"
 
     class Config:
@@ -20,15 +25,15 @@ app = FastAPI(root_path="/api/state", openapi_url=settings.openapi_url)
 r = redis.Redis(host="localhost", port=6379, db=0)
 
 # defines a new game in request body
-class Game(BaseModel):
+class Guess(BaseModel):
     user_id: str
-    game_id: int
+    guess: str
 
 
-class State(BaseModel):
-    status: Optional[str] = "new"
+class GameState(BaseModel):
+    status: Optional[str]
     user_id: str
-    game_id: int
+    game_id: int = int(datetime.date.today().strftime("%Y%m%d"))
     remaining: Optional[int] = 6
     guesses: Optional[list] = []
 
@@ -39,8 +44,9 @@ class Message(BaseModel):
 
 # get game status
 @app.get(
-    "/game/",
-    response_model=State,
+    "/users/{user_id}/game/{game_id}",
+    response_model=GameState,
+    response_model_exclude_unset=True,
     responses={
         404: {"model": Message, "description": "The game was not found"},
         200: {
@@ -74,8 +80,9 @@ def get_game(user_id: str, game_id: int):
 
 # start a new game
 @app.post(
-    "/game/",
-    response_model=State,
+    "/game/new",
+    response_model=GameState,
+    response_model_exclude=["remaining", "guesses"],
     responses={
         403: {
             "model": Message,
@@ -89,40 +96,35 @@ def get_game(user_id: str, game_id: int):
                         "status": "new",
                         "user_id": "6b6c3a30-c0dd-4df5-acfc-a00fc51fb5f3",
                         "game_id": 48,
-                        "remaining": 6,
-                        "guesses": [],
                     }
                 }
             },
         },
     },
 )
-def new_game(game: Game):
+def new_game(game: GameState):
     res = r.hmget(game.user_id, game.game_id)
     if res[0] != None:
         return JSONResponse(
             status_code=403, content={"message": "Game ID already exists for this user"}
         )
     # create new game in json format so it can be set in redis
-    new_game = {
-        "status": "new",
-        "user_id": game.user_id,
-        "game_id": game.game_id,
-        "remaining": 6,
-        "guesses": [],
-    }
-    mapping = json.dumps(new_game)
+    new_game = GameState(
+        status="new", user_id=game.user_id, game_id=game.game_id
+    ).json()
+    new_game = json.loads(new_game)
     # set the new game object with user_id as the key
     r.hmset(
         game.user_id,
-        {game.game_id: mapping},
+        {game.game_id: json.dumps(new_game)},
     )
     return new_game
 
 
+# update game with new guess
 @app.post(
-    "/game/update",
-    response_model=State,
+    "/game/{game_id}/new",
+    response_model=GameState,
     responses={
         404: {"model": Message, "description": "The game was not found"},
         200: {
@@ -141,27 +143,68 @@ def new_game(game: Game):
         },
     },
 )
-def add_guess(guess: str, game: Game):
-    res = r.hmget(game.user_id, game.game_id)
+def add_guess(game_id: int, guess: Guess):
+    data = json.loads(guess.json())
+    user_id = data.get("user_id")
+    guess = data.get("guess")
+    res = r.hmget(user_id, game_id)
     # if game is already played return error
     if res[0] == None:
         raise HTTPException(status_code=400, detail="Failed to add guess")
     # gets game object from redis
     game_state = json.loads(res[0])
     # check if game is already complete
-    if game_state["status"] == "finished":
+    if game_state["status"] == "new":
+        game_state["status"] = "in-progress"
+    elif game_state["status"] == "finished":
         raise HTTPException(status_code=403, detail="This game has ended")
     # add new guess and update remaining attempts
     game_state["remaining"] -= 1
     game_state["guesses"].append(guess)
-    # update status
-    game_state["status"] = "in-progress"
+    # update status if finished
     if game_state["remaining"] == 0:
         game_state["status"] = "finished"
     # save changes
     mapping = json.dumps(game_state)
     r.hmset(
-        game.user_id,
-        {game.game_id: mapping},
+        user_id,
+        {game_id: mapping},
+    )
+    return game_state
+
+
+# mark game as complete if guess is correct
+@app.put(
+    "/users/{user_id}/game/{game_id}",
+    response_model=GameState,
+    responses={
+        404: {"model": Message, "description": "The game was not found"},
+        200: {
+            "description": "Game finished successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "finished",
+                        "user_id": "6b6c3a30-c0dd-4df5-acfc-a00fc51fb5f3",
+                        "game_id": 48,
+                        "remaining": 5,
+                        "guesses": ["forge"],
+                    }
+                }
+            },
+        },
+    },
+)
+def mark_complete(game_id: int, user_id: str):
+    res = r.hmget(user_id, game_id)
+    if res[0] == None:
+        raise HTTPException(status_code=400, detail="Game ID Not Found")
+    # gets game object from redis
+    game_state = json.loads(res[0])
+    game_state["status"] = "finished"
+    mapping = json.dumps(game_state)
+    r.hmset(
+        user_id,
+        {game_id: mapping},
     )
     return game_state

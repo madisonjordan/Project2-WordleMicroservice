@@ -1,23 +1,20 @@
-import collections
 import contextlib
 import logging.config
 import sqlite3
-import typing
+from typing import Optional
 import json
 import datetime
 from datetime import date
-import sqlite_utils
 from sqlite_utils import Database
 
-
-from fastapi import FastAPI, Depends, Response, HTTPException, status, Body
+from fastapi import FastAPI, Depends, Response, HTTPException, Body
 from pydantic import BaseModel, BaseSettings
-from typing import Optional
+from typing import Optional, List, Literal
 
 
 class Settings(BaseSettings):
-    database: str
-    logging_config: str
+    database: str = "./var/answers.db"
+    logging_config: str = "./etc/logging.ini"
     openapi_url: str = "/openapi.json"
 
     class Config:
@@ -25,8 +22,18 @@ class Settings(BaseSettings):
 
 
 class Answer(BaseModel):
-    day: Optional[str] = datetime.date.today().strftime("%Y-%m-%d")
+    day: int = int(datetime.date.today().strftime("%Y%m%d"))
     word: str
+
+
+class Letters(BaseModel):
+    correct: list
+    present: list
+
+
+class Check(BaseModel):
+    status: Literal["incorrect", "correct"]
+    letters: Letters
 
 
 settings = Settings()
@@ -45,14 +52,14 @@ def get_logger():
 
 # get WOTD based on the date parameter entered
 @app.get("/answers/{day}")
-def get_answer(day: str, response: Response, db: sqlite3.Connection = Depends(get_db)):
+def get_answer(
+    day: int = int(datetime.date.today().strftime("%Y%m%d")),
+    db: sqlite3.Connection = Depends(get_db),
+):
     cur = db.execute("SELECT word FROM answers WHERE day = ?", [day])
     wotd = cur.fetchall()
     if not wotd:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No Answer for this Day",
-        )
+        raise HTTPException(status_code=404, detail="No Answer for this Day")
     return wotd
 
 
@@ -66,7 +73,6 @@ def get_all_answers(response: Response, db: sqlite3.Connection = Depends(get_db)
 @app.put("/answers")
 def change_answer(
     answer: Answer,
-    response: Response,
     db: sqlite3.Connection = Depends(get_db),
 ):
     word = dict(answer)
@@ -77,17 +83,17 @@ def change_answer(
     wotd = cur.fetchall()
     if not wotd:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="No Answer for this Day",
         )
     return wotd
 
 
 # check guess against today's answer in answers.db
-@app.get("/check/{guess}")
+@app.get("/check/{guess}", response_model=Check)
 def find_answer(
     guess: str,
-    day: str = datetime.date.today().strftime("%Y-%m-%d"),
+    day: Optional[int] = int(datetime.date.today().strftime("%Y%m%d")),
     db: sqlite3.Connection = Depends(get_db),
     logger: logging.Logger = Depends(get_logger),
 ):
@@ -96,21 +102,24 @@ def find_answer(
     answer = cur.fetchone()
     if not answer:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No Answer for this Day"
+            status_code=404,
+            detail="No Answer for this Day",
         )
     answer = answer[0]
-    check = [len(guess)]
+    correct = []
+    present = []
     for x in range(len(guess)):
         curr_letter = f"{guess}"[x]
         if guess[x] == f"{answer}"[x]:
-            check_pos = "correct"
+            correct.append(curr_letter)
         elif f"{guess}"[x] in f"{answer}":
-            check_pos = "exists"
+            present.append(curr_letter)
         else:
-            check_pos = "not in answer"
+            pass
 
-        check.append(
-            {"position": f"{x}", "letter": f"{curr_letter}", "check": f"{check_pos}"}
-        )
+    if len(correct) == len(guess):
+        status = "correct"
+    else:
+        status = "incorrect"
 
-    return check
+    return {"status": status, "letters": {"correct": correct, "present": present}}

@@ -1,13 +1,10 @@
 import sqlite3
 import uuid
-import sqlite_utils
 import datetime
-import contextlib
 import logging.config
-import collections
-import itertools
 import redis
 import json
+from typing import Optional
 
 from fastapi import FastAPI, Depends, Response, HTTPException, status, Request
 from pydantic import BaseModel, BaseSettings
@@ -18,9 +15,9 @@ sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
 
 
 class Settings(BaseSettings):
-    database_dir: str
-    logging_config: str
-    shards: int
+    database_dir: str = "./var/"
+    logging_config: str = "./etc/logging.ini"
+    shards: int = 3
     openapi_url: str = "/openapi.json"
 
     class Config:
@@ -30,14 +27,14 @@ class Settings(BaseSettings):
 class Game(BaseModel):
     user_id: str
     game_id: int = int(datetime.date.today().strftime("%Y%m%d"))
-    finished: datetime.date
+    finished: Optional[datetime.date] = datetime.date.today()
     guesses: int
     won: bool
 
 
 class User(BaseModel):
-    user_id: str
     username: str
+    user_id: Optional[str]
 
 
 class UserStats(BaseModel):
@@ -88,7 +85,7 @@ def get_user_id(username: str):
         )
         user = cur.fetchone()
         if user:
-            result = {"user_id": user[0], "username": user[1]}
+            result = {"username": user[1], "user_id": user[0]}
             break
     if not user:
         raise HTTPException(
@@ -98,9 +95,9 @@ def get_user_id(username: str):
     return result
 
 
-@app.get("/users/{username}/stats", response_model=UserStats)
-def get_stats(username: str):
-    user_id = get_user_id(username).get("user_id")
+# get user stats by user_id
+@app.get("/users/{user_id}/stats", response_model=UserStats)
+def get_stats(user_id: str):
     shard = getShardId(user_id)
     db = sqlite3.connect(f"{settings.database_dir}stats{shard}.db")
     max_streak = db.execute(
