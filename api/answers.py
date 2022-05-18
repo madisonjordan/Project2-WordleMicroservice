@@ -33,7 +33,7 @@ class Letters(BaseModel):
 
 
 class Check(BaseModel):
-    status: Literal["incorrect", "correct", "invalid"]
+    isCorrect: Literal["incorrect", "correct"]
     letters: Letters
 
 
