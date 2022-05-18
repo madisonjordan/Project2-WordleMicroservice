@@ -82,7 +82,7 @@ def get_game(user_id: str, game_id: int):
 @app.post(
     "/game/new",
     response_model=GameState,
-    response_model_exclude_defaults=True,
+    response_model_exclude=["remaining", "guesses"],
     responses={
         403: {
             "model": Message,

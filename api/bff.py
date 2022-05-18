@@ -2,7 +2,7 @@ import asyncio
 from urllib import response
 import httpx
 import json
-from pydantic import BaseModel
+from pydantic import BaseModel, BaseSettings
 from typing import Optional, Literal
 import datetime
 from fastapi import FastAPI, Depends, Response, HTTPException, Body
@@ -13,10 +13,15 @@ from words import app as word_service
 from stats import app as stats_service
 from game_state import app as game_state_service
 
+
+class Settings(BaseSettings):
+    logging_config: str = "./etc/logging.ini"
+    openapi_url: str = "/api/bff/openapi.json"
+
+
 # input/output models for bff service endpoints
 class User(BaseModel):
     username: str
-    user_id: Optional[str]
 
 
 class Guess(BaseModel):
@@ -36,8 +41,7 @@ class Game(BaseModel):
 def getUser(username: str):
     with httpx.Client(base_url="http://localhost:9999/api/statistics") as client:
         response = client.get(f"/users/{username}")
-        print(response.url)
-        return response.json()
+        return response
 
 
 # create new game
@@ -60,8 +64,8 @@ def getGame(game: Game):
 
 # check if user has guesses remaining in this game
 def isValidGame(game: Game):
-    game_id = game.get("game_id")
-    user_id = game.get("user_id")
+    game_id = game.game_id
+    user_id = game.user_id
     headers = {"content-type": "application/json"}
     with httpx.Client(base_url="http://localhost:9999/api/state") as client:
         response = client.get(f"users/{user_id}/game/{game_id}", headers=headers)
@@ -134,6 +138,35 @@ def getStats(user_id: str):
         return response
 
 
+settings = Settings()
+app = FastAPI(root_path="/api/bff", openapi_url=settings.openapi_url)
+
+
+@app.post("/game/new")
+# NEW GAME workflow
+# input: username
+# output: game state of this game
+# error conditions:
+#   - game id already exists (conflict)
+def new_game(username: User):
+    # game_id test value - when not using default (today)
+    # test_gameid = 20220221
+    # get user_id
+    user = getUser(username.username)
+    # print values for getUser response
+    print("getUser():\n\t", user, "\n")
+    user_text = json.loads(user.text)
+    user = user_text.get("user_id")
+    # create new game object using user and default game_id
+    game = Game(user_id=user).json()
+    # test another day using test game_id
+    # game = Game(user_id=user, game_id=test_gameid).json()
+    # pass new game object and create new game
+    # store/print response in "new_game" for debugging
+    response = create_game(game)
+    return response.json()
+
+
 # NEW GUESS Workflow
 # input: user_id (pick one)
 # output:
@@ -141,20 +174,21 @@ def getStats(user_id: str):
 #   - game doesn't exist
 #   - game has ended
 #   - word isn't valid
+@app.post("/game/{game_id}")
 def new_guess(game_id: int, guess: Guess):
     # get user from guess request body
-    user = guess.get("user_id")
+    user = guess.user_id
     # create game object
     game = Game(user_id=user, game_id=game_id)
     # get guess string from guess request body
-    current_guess = guess.get("guess")
+    current_guess = guess.guess
     isCorrect = False
     isWordValid = False
     isGameValid = False
 
     # check if game is valid
     print("\nisValidGame():")
-    if isValidGame(json.loads(game.json())):
+    if isValidGame(game):
         isGameValid = True
 
     # check if word is valid
@@ -190,7 +224,7 @@ def new_guess(game_id: int, guess: Guess):
             isCorrect = True
             markGameComplete(json.loads(game.json()))
         else:
-            return check
+            return check.json()
 
         # get game state
         game_state = getGame(json.loads(game.json()))
@@ -205,43 +239,12 @@ def new_guess(game_id: int, guess: Guess):
             )
             updateStats(json.loads(updated_game.json()))
             # get updated stats
-            getStats(user)
-
-
-# NEW GAME workflow
-# input: username
-# output: game state of this game
-# error conditions:
-#   - game id already exists (conflict)
-def new_game(username: User):
-    # game_id test value - when not using default (today)
-    test_gameid = 20220215
-    # get user_id
-    user = getUser(username)
-    # print values for getUser response
-    print("getUser():\n\t", user, "\n")
-    user = user.get("user_id")
-    # create new game object using user and default game_id
-    game = Game(user_id=user).json()
-    game = Game(user_id=user, game_id=test_gameid).json()
-    # print for debugging
-    print("Game model object:\n\t", game, "\n")
-    print("\ncreate_game():")
-    # pass new game object and create new game
-    # store/print response in "new_game" for debugging
-    create_game(game)
-    # TEST NEW_GUESS
-    # get the specified game object
-    print("\ngetGame():")
-    getGame(json.loads(game))
-    # pass a new Guess object to the new_guess function
-    guess = Guess(user_id=user, guess="dfasf").json()
-    new_guess(test_gameid, json.loads(guess))
+            return getStats(user).json()
 
 
 # test new game() for endpoint
-user1 = "christina22"
-new_game(user1)
+# user1 = "christina22"
+# new_game(user1)
 
 
 # TEST async
