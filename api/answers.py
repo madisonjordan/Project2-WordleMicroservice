@@ -107,7 +107,8 @@ def find_answer(
     answer = cur.fetchone()
     if not answer:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No Answer for this Day"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No Answer for this Day",
         )
     answer = answer[0]
     correct = []
