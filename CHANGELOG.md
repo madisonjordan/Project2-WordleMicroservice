@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Changed stats to search by user_id for passing from BFF service
 - Change UPDATE game in game_state to use game_id in path
 - Changed settings in services to contain default values when not using .env files
+- Changed response model in game state to use GameState model instead of Game input model and State output model
+
+### Removed
+
+- Removed Game model from game state service
 
 ## [3.0.1] 2022-05-13
 
