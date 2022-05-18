@@ -7,8 +7,7 @@ import datetime
 from datetime import date
 from sqlite_utils import Database
 
-
-from fastapi import FastAPI, Depends, Response, HTTPException, Body, status
+from fastapi import FastAPI, Depends, Response, HTTPException, Body
 from pydantic import BaseModel, BaseSettings
 from typing import Optional, List, Literal
 
@@ -60,9 +59,7 @@ def get_answer(
     cur = db.execute("SELECT word FROM answers WHERE day = ?", [day])
     wotd = cur.fetchall()
     if not wotd:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No Answer for this Day"
-        )
+        raise HTTPException(status_code=404, detail="No Answer for this Day")
     return wotd
 
 
