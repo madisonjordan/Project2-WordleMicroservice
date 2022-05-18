@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Change UPDATE game in game_state to use game_id in path
 - Changed settings in services to contain default values when not using .env files
 - Changed response model in game state to use GameState model instead of Game input model and State output model
+- Changed answers.db to use int as date instead of string
 
 ### Removed
 

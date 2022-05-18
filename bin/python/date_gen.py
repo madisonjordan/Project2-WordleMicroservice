@@ -6,5 +6,5 @@ def convert(value):
 
     # start_day = date.today();
     start_day = date.fromisoformat("2021-12-31")
-    day = (start_day + timedelta(days=(value))).strftime("%Y-%m-%d")
-    return day
+    day = (start_day + timedelta(days=(value))).strftime("%Y%m%d")
+    return int(day)
