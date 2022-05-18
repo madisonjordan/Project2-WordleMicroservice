@@ -154,7 +154,6 @@ def new_game(username: User):
     # get user_id
     user = getUser(username.username)
     # print values for getUser response
-    print("getUser():\n\t", user, "\n")
     user_text = json.loads(user.text)
     user = user_text.get("user_id")
     # create new game object using user and default game_id
@@ -164,7 +163,10 @@ def new_game(username: User):
     # pass new game object and create new game
     # store/print response in "new_game" for debugging
     response = create_game(game)
-    return response.json()
+    if response.status_code == 201:
+        return response.json()
+    else:
+        return getGame(json.loads(game)).json()
 
 
 # NEW GUESS Workflow
@@ -187,12 +189,12 @@ def new_guess(game_id: int, guess: Guess):
     isGameValid = False
 
     # check if game is valid
-    print("\nisValidGame():")
     if isValidGame(game):
         isGameValid = True
+    else:
+        return HTTPException(status_code=204, headers="application/json")
 
     # check if word is valid
-    print("\nisValidWord():")
     if isValidWord(current_guess):
         isWordValid = True
     else:
@@ -206,17 +208,13 @@ def new_guess(game_id: int, guess: Guess):
             content=json.dumps(invalid_body),
             media_type="application/json",
         )
-        print(invalid_response.status_code)
-        print(json.dumps(invalid_body))
         return invalid_response
 
     # add new guess to game
     if (isWordValid) and (isGameValid):
-        print("\nadd_guess():")
         add_guess(json.loads(game.json()), current_guess)
 
         # check if the guess is correct from the response
-        print("\ncheck_guess():")
         check = check_guess(current_guess, game_id)
         check_text = json.loads(check.text)
         check_status = check_text.get("status")
