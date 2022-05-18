@@ -73,7 +73,6 @@ def get_all_answers(response: Response, db: sqlite3.Connection = Depends(get_db)
 @app.put("/answers")
 def change_answer(
     answer: Answer,
-    response: Response,
     db: sqlite3.Connection = Depends(get_db),
 ):
     word = dict(answer)
@@ -84,7 +83,7 @@ def change_answer(
     wotd = cur.fetchall()
     if not wotd:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="No Answer for this Day",
         )
     return wotd
@@ -103,7 +102,7 @@ def find_answer(
     answer = cur.fetchone()
     if not answer:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="No Answer for this Day",
         )
     answer = answer[0]
