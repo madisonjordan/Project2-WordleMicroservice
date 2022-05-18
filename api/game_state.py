@@ -121,9 +121,9 @@ def new_game(game: GameState):
     return new_game
 
 
-# update game
+# update game with new guess
 @app.post(
-    "/game/{game_id}",
+    "/game/{game_id}/new",
     response_model=GameState,
     responses={
         404: {"model": Message, "description": "The game was not found"},
@@ -165,6 +165,43 @@ def add_guess(game_id: int, guess: Guess):
     if game_state["remaining"] == 0:
         game_state["status"] = "finished"
     # save changes
+    mapping = json.dumps(game_state)
+    r.hmset(
+        user_id,
+        {game_id: mapping},
+    )
+    return game_state
+
+
+# mark game as complete if guess is correct
+@app.put(
+    "/users/{user_id}/game/{game_id}",
+    response_model=GameState,
+    responses={
+        404: {"model": Message, "description": "The game was not found"},
+        200: {
+            "description": "Game finished successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "finished",
+                        "user_id": "6b6c3a30-c0dd-4df5-acfc-a00fc51fb5f3",
+                        "game_id": 48,
+                        "remaining": 5,
+                        "guesses": ["forge"],
+                    }
+                }
+            },
+        },
+    },
+)
+def mark_complete(game_id: int, user_id: str):
+    res = r.hmget(user_id, game_id)
+    if res[0] == None:
+        raise HTTPException(status_code=400, detail="Game ID Not Found")
+    # gets game object from redis
+    game_state = json.loads(res[0])
+    game_state["status"] = "finished"
     mapping = json.dumps(game_state)
     r.hmset(
         user_id,
