@@ -2,28 +2,33 @@
   [http.middlewares]
 
     [http.middlewares.api-stripprefix.stripPrefix]
-      prefixes = ["/api/statistics", "/api/word", "/api/answer", "/api/state"]
+      prefixes = ["/api/statistics", "/api/word", "/api/answer", "/api/state", "/api/bff"]
 
   [http.routers]
 
     [http.routers.words]
       service = "words"
-      rule = "PathPrefix(`/api/word`) || PathPrefix(`/words`)"
+      rule = "PathPrefix(`/api/word`)"
       middlewares = ["api-stripprefix"] 
 
     [http.routers.answers]
       service = "answers"
-      rule = "PathPrefix(`/api/answer`) || PathPrefix(`/answers`) || PathPrefix(`/check`)"
+      rule = "PathPrefix(`/api/answer`)"
       middlewares = ["api-stripprefix"]
 
     [http.routers.stats]
       service = "statistics"
-      rule = "PathPrefix(`/api/statistics`) || PathPrefix(`/users`) || PathPrefix(`/top10`)"
+      rule = "PathPrefix(`/api/statistics`)"
       middlewares = ["api-stripprefix"]
     
     [http.routers.state]
       service = "state"
       rule = "PathPrefix(`/api/state`)"
+      middlewares = ["api-stripprefix"] 
+
+    [http.routers.bff]
+      service = "bff"
+      rule = "PathPrefix(`/api/bff`)"
       middlewares = ["api-stripprefix"] 
 
   [http.services]
@@ -51,3 +56,9 @@
       [http.services.state.loadBalancer]
         [[http.services.state.loadBalancer.servers]]
           url = "http://127.0.0.1:5400"
+
+    [http.services.bff]
+      [http.services.bff.loadBalancer]
+        [[http.services.bff.loadBalancer.servers]]
+          url = "http://127.0.0.1:5500"
+
