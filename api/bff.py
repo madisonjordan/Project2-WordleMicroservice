@@ -29,14 +29,6 @@ class Guess(BaseModel):
     guess: str
 
 
-class State(BaseModel):
-    status: Literal["new", "in-progress", "finished"]
-    user_id: str
-    game_id: int
-    remaining: int = 6
-    guesses: list = []
-
-
 # get user_id from stats service
 def getUser(username: str):
     with httpx.Client(base_url="http://localhost:9999/api/statistics") as client:
@@ -201,7 +193,7 @@ def new_guess(game_id: int, guess=Guess):
 #   - game id already exists (conflict)
 def new_game(username: User):
     # game_id test value - when not using default (today)
-    test_gameid = 20220601
+    test_gameid = 20220602
     # get user_id
     user = getUser(username)
     # print values for getUser response

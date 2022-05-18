@@ -30,7 +30,7 @@ class Guess(BaseModel):
     guess: str
 
 
-class Game(BaseModel):
+class GameState(BaseModel):
     status: Optional[str]
     user_id: str
     game_id: int = int(datetime.date.today().strftime("%Y%m%d"))
@@ -45,7 +45,7 @@ class Message(BaseModel):
 # get game status
 @app.get(
     "/users/{user_id}/game/{game_id}",
-    response_model=Game,
+    response_model=GameState,
     response_model_exclude_unset=True,
     responses={
         404: {"model": Message, "description": "The game was not found"},
@@ -81,7 +81,7 @@ def get_game(user_id: str, game_id: int):
 # start a new game
 @app.post(
     "/game/new",
-    response_model=Game,
+    response_model=GameState,
     response_model_exclude_defaults=True,
     responses={
         403: {
@@ -102,14 +102,16 @@ def get_game(user_id: str, game_id: int):
         },
     },
 )
-def new_game(game: Game):
+def new_game(game: GameState):
     res = r.hmget(game.user_id, game.game_id)
     if res[0] != None:
         return JSONResponse(
             status_code=403, content={"message": "Game ID already exists for this user"}
         )
     # create new game in json format so it can be set in redis
-    new_game = Game(status="new", user_id=game.user_id, game_id=game.game_id).json()
+    new_game = GameState(
+        status="new", user_id=game.user_id, game_id=game.game_id
+    ).json()
     new_game = json.loads(new_game)
     # set the new game object with user_id as the key
     r.hmset(
@@ -122,7 +124,7 @@ def new_game(game: Game):
 # update game
 @app.post(
     "/game/{game_id}",
-    response_model=Game,
+    response_model=GameState,
     responses={
         404: {"model": Message, "description": "The game was not found"},
         200: {
